@@ -3,6 +3,7 @@
 		Slot 1 = Logs
 		Slot 2 = Dirt
 --]]
+VER = 0.1
 NORTH, EAST, SOUTH, WEST = 0, 1, 2, 3;
 
 --[[
@@ -326,6 +327,8 @@ state = {
 ---------------------
 -- Start
 ---------------------
+print("Running Prey v" .. VER);
+
 while state.job ~= nil do
 	state.job();
 end
