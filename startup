@@ -2,12 +2,17 @@
 	Vars
 		Slot 1 = Logs
 		Slot 2 = Dirt
+                Slot 3 = Saplings
 --]]
 VER = 0.2;
 NORTH, EAST, SOUTH, WEST = 0, 1, 2, 3;
 
+----------------------------------------------------------------------
+-- Tasks
+----------------------------------------------------------------------
+
 --[[
-	First task:
+	First Task:
 		find first adjacent tree
 --]]
 function findFirstTree()
@@ -64,7 +69,7 @@ function findFirstTree()
 end
 
 --[[
-	Second task:
+	Second Task:
 		find more near by trees
 --]]
 function findMoreTrees()
@@ -113,12 +118,19 @@ function findMoreTrees()
 end
 
 --[[
-	Third Job
+	Third Task:
 		collect sapplings from first tree
 --]]
 function findSaplings()
-	turtle.goHome();
+	turtle.goto(state.home.x, 0, state.home.z);
+        
+        turtle.select(3);
+        turtle.suckDown();
 end
+
+----------------------------------------------------------------------
+-- Util
+----------------------------------------------------------------------
 
 --[[
 	Common Functions
