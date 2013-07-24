@@ -79,7 +79,7 @@ end
 function findMoreTrees()
 	turtle.goHome();
 	
-	removeUnwanted(3);
+	turtle.removeUnwanted(3);
 	turtle.select(1);
 	
 	local oldSlots = { [1] = turtle.getItemCount(1), [2] = turtle.getItemCount(2) };
@@ -116,7 +116,7 @@ function findMoreTrees()
 		end
 	end
 	
-	removeUnwanted(3);
+	turtle.removeUnwanted(3);
 	
 	turtle.setJob(findSaplings);
 end
@@ -315,13 +315,6 @@ oldTurtle = {
 	refuel = turtle.refuel
 };
 
-turtle.setJob = function(pJob)
-	assert(pJob == nil or type(pJob) == "function");
-	
-	state.prevJob = state.job;
-	state.job = pJob;
-end
-
 turtle.refuel = function(pForce, pAmount)	
 	if pForce or turtle.getFuelLevel() < 1 then
 		if pAmount == nil then pAmount = 1; end
@@ -410,6 +403,9 @@ turtle.turnLeft = function()
 	return true;
 end
 
+--[[
+	Turtle Util
+--]]
 turtle.face = function(pFace)
 	assert(pFace >= 0 and pFace <= 3, "Invalid direction " .. pFace);
 	
@@ -453,10 +449,7 @@ turtle.clearSlot = function(pSlot)
 	turtle.drop();
 end
 
---[[
-	Util
---]]
-function clearInventory()
+turtle.clearInventory = function()
 	for i = 1, 16 do
 		turtle.select(i);
 		turtle.drop();
@@ -464,7 +457,7 @@ function clearInventory()
 end
 
 -- Remove any unwanted items from slot pStartIdx onward
-function removeUnwanted(pStartIdx)
+turtle.removeUnwanted = function(pStartIdx)
 	assert(type(pStartIdx) == "number" and pStartIdx >= 1 and pStartIdx <= 16, "Invalid start idx " .. pStartIdx);
 
 	for i = pStartIdx, 16 do
@@ -472,6 +465,13 @@ function removeUnwanted(pStartIdx)
 		turtle.refuel(true, 64);
 		turtle.drop();
 	end
+end
+
+turtle.setJob = function(pJob)
+	assert(pJob == nil or type(pJob) == "function");
+	
+	state.prevJob = state.job;
+	state.job = pJob;
 end
 
 --[[
