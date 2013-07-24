@@ -102,7 +102,7 @@ function findMoreTrees()
 					-- Check is an unknown tree, if is cut it down using it all as fuel
 					turtle.select(3);
 					if (turtle.compareUp() or turtle.compareDown()) and turtle.refuel(true) then
-						cutTree(3, 4);
+					    cutTree(3, 4);
 					-- Only avoid if not too high already
 					elseif (state.y < state.home.y + 4) then
 					    turtle.up();
@@ -317,7 +317,7 @@ end
 
 turtle.refuel = function(pForce, pAmount)	
 	if pForce or turtle.getFuelLevel() < 1 then
-		if pAmount == nil then pAmount = 64; end
+		if pAmount == nil then pAmount = 1; end
 	
 		return oldTurtle.refuel(pAmount);
 	else
