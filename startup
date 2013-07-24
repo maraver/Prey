@@ -168,7 +168,7 @@ end
 --]]
 function getCobblestone()
     -- Get any saplings that fell in dirt hole
-    turtle.goto(turtle.home.x, 0, turtle.home.z);
+    turtle.goto(state.home.x, 0, state.home.z);
     turtle.suckDown();
     
     turtle.removeUnwanted(4);
