@@ -468,7 +468,6 @@ end
 --[[
 	State machine
 --]]
-
 state = {
 	job = findFirstTree,
 	prevJob = nil,
@@ -494,6 +493,7 @@ state = {
 print("Running Prey v" .. VER);
 
 while state.job ~= nil do
+	print("Job " .. tostring(state.job));
 	state.job();
 end
 
