@@ -3,7 +3,7 @@
 		Slot 1 = Logs
 		Slot 2 = Dirt
 --]]
-VER = 0.1
+VER = 0.2;
 NORTH, EAST, SOUTH, WEST = 0, 1, 2, 3;
 
 --[[
@@ -50,7 +50,6 @@ function findFirstTree()
 				state.home.x = state.x;
 				state.home.y = 2;
 				state.home.z = state.z;
-				turtle.goHome();
 				
 				-- Next job
 				turtle.setJob(findMoreTrees);
@@ -59,7 +58,7 @@ function findFirstTree()
 				turtle.drop();
 			end
 		else
-			turtle.turnRight();
+			turtle.turnLeft();
 		end
 	end
 end
@@ -69,8 +68,7 @@ end
 		find more near by trees
 --]]
 function findMoreTrees()
-	-- Use all but 1 log to fuel
-	turtle.refuel(true, turtle.getItemCount(1) - 1);
+	turtle.goHome();
 	
 	removeUnwanted(3);
 	turtle.select(1);
@@ -85,32 +83,64 @@ function findMoreTrees()
 				
 				if turtle.getItemCount(1) > oldSlots[1] then
 					oldSlots[1] = turtle.getItemCount(1);
-					cutTree();
+					cutTree(1, 3);
 				elseif turtle.getItemCount(2) > oldSlots[2] then
 					oldSlots[2] = turtle.getItemCount(2);
 					if (state.y < state.home.y + 4) then 
 						turtle.up();
 					end
 				elseif turtle.getItemCount(3) > 0 then
-					if (state.y < state.home.y + 4) then 
-						turtle.up(); 
+					-- Check is an unknown tree, if is cut it down using it all as fuel
+					turtle.select(3);
+					if turtle.compareUp() or turtle.compareDown() and turtle.refuel(true) then
+						cutTree(3, 4);
+					-- Only avoid if not too high already
+					elseif (state.y < state.home.y + 4) then 
+						turtle.up();
 					end
-					removeUnwanted(3);
-					turtle.select(0);
+					
+					turtle.clearSlot(3);
+					turtle.select(1);
 				end
 			end
 			turtle.turnRight();
 		end
 	end
 	
-	turtle.goHome()
-	turtle.setJob(nil);
+	removeUnwanted(3);
+	
+	turtle.setJob(findSaplings);
+end
+
+--[[
+	Third Job
+		collect sapplings from first tree
+--]]
+function findSaplings()
+	turtle.goHome();
 end
 
 --[[
 	Common Functions
 --]]
 
+-- Cut down a tree and remove excess in overflow slot
+function cutTree(pTargSlot, pOverflow)
+	assert(type(pOverflow) == "number" and type(pTargSlot) == "number", "Slots must be numbers");
+
+	local startY = state.y;
+	
+	turtle.select(pTargSlot);
+	while turtle.compareUp() do turtle.up(); end
+	
+	turtle.goto(state.x, startY, state.z);
+	
+	while turtle.compareDown() do turtle.down(); end
+	
+	turtle.goto(state.x, startY, state.z);
+	
+	turtle.clearSlot(pOverflow);
+end
 
 --[[
 	New Turtle Util
@@ -122,31 +152,24 @@ oldTurtle = {
 	refuel = turtle.refuel
 };
 
-turtle.setJob = function(job)
-	assert(job == nil or type(job) == "function");
+turtle.setJob = function(pJob)
+	assert(pJob == nil or type(pJob) == "function");
 	
 	state.prevJob = state.job;
-	state.job = job;
+	state.job = pJob;
 end
 
-turtle.refuel = function(force, amount)	
-	if force or turtle.getFuelLevel() < 1 then
-		if amount == nil then amount = 1; end
-
-		-- Find a fuel to use
-		for slot,isFuel in pairs(state.fuelSlots) do
-			if (isFuel and turtle.getItemCount(slot) > amount) then
-				turtle.select(slot);
-				break;
-			end
-		end
+turtle.refuel = function(pForce, pAmount)	
+	if pForce or turtle.getFuelLevel() < 1 then
+		if pAmount == nil then pAmount = 64; end
 	
-		return oldTurtle.refuel(amount);
+		return oldTurtle.refuel(pAmount);
 	else
 		return true;
 	end
 end
 
+-- Slow, use sparingly
 turtle.back = function()
 	turtle.turnRight();
 	turtle.turnRight();
@@ -163,59 +186,49 @@ end
 turtle.forward = function()
 	turtle.refuel();
 
-	if turtle.detect() then turtle.dig(); end
+	while not oldTurtle.forward() do
+		-- Try to mine, if can't mine hit something unmineable (bedrock)
+		if turtle.detect() and not turtle.dig() then return false; end
 	
-	if oldTurtle.forward() then
-		incPosByFace();
-		return true;
-	else
 		while turtle.attack() do end
-		
-		if oldTurtle.forward() then
-			incPosByFace();
-			return true;
-		end
 	end
+	
+	if state.face == NORTH then state.x = state.x + 1;
+	elseif state.face == SOUTH then state.x = state.x - 1;
+	elseif state.face == EAST then state.z = state.z + 1;
+	elseif state.face == WEST then state.z = state.z - 1;
+	else error("Turtle invalid face " .. state.face);
+	end
+	
+	return true;
 end
 	
 turtle.up = function()
 	turtle.refuel();
 
-	if turtle.detectUp() then turtle.digUp(); end
-
-	if oldTurtle.up() then
-		state.y = state.y + 1;
-		return true;
-	else
-		-- Try and kill whatever is blocking
-		while turtle.attackUp() do end
+	while not oldTurtle.up() do
+		-- Try to mine, if can't mine hit something unmineable (bedrock)
+		if turtle.detectUp() and not turtle.digUp() then return false; end
 		
-		-- Try going up one more time
-		if oldTurtle.up() then
-			state.y = state.y + 1;
-			return true;
-		end
+		while turtle.attackUp() do end
 	end
+	
+	state.y = state.y + 1;
+	return true;
 end
 
 turtle.down = function()
 	turtle.refuel();
 
-	if turtle.detectDown() then turtle.digDown(); end
-
-	if oldTurtle.down() then
-		state.y = state.y - 1;
-		return true;
-	else
-		-- Try and kill whatever is blocking
-		while turtle.attackDown() do end
+	while not oldTurtle.down() do
+		-- Try to mine, if can't mine hit something unmineable (bedrock)
+		if turtle.detectDown() and not turtle.digDown() then return false; end
 		
-		-- Try going down one more time
-		if oldTurtle.down() then
-			state.y = state.y - 1;
-			return true;
-		end
+		while turtle.attackDown() do end
 	end
+
+	state.y = state.y - 1;
+	return true;
 end
 
 turtle.turnRight = function()
@@ -234,41 +247,47 @@ turtle.turnLeft = function()
 	return true;
 end
 
-turtle.face = function(dir)
-	assert(dir >= 0 and dir <= 3, "Invalid direction " .. dir);
+turtle.face = function(pFace)
+	assert(pFace >= 0 and pFace <= 3, "Invalid direction " .. pFace);
 	
-	while (dir > state.face) do turtle.turnRight(); end
-	while (dir < state.face) do turtle.turnLeft(); end
+	while (pFace > state.face) do turtle.turnRight(); end
+	while (pFace < state.face) do turtle.turnLeft(); end
 end
 
-turtle.goto = function(x, y, z)
-	assert(type(x) == "number" and type(y) == "number" and type(z) == "number");
+turtle.goto = function(pX, pY, pZ)
+	assert(type(pX) == "number" and type(pY) == "number" and type(pZ) == "number", "Goto location must be given as 3 numbers");
 	
 	-- Correct x position
-	if state.x > x then
+	if state.x > pX then
 		turtle.face(SOUTH);
-	elseif state.x < x then
+	elseif state.x < pX then
 		turtle.face(NORTH);
 	end	
 	
-	while state.x ~= x do turtle.forward(); end
+	while state.x ~= pX do turtle.forward(); end
 	
 	-- Correcy z position
-	if state.z > z then
+	if state.z > pZ then
 		turtle.face(WEST);
-	elseif state.z < z then
+	elseif state.z < pZ then
 		turtle.face(EAST);
 	end
-	while state.z ~= z do turtle.forward(); end
+	while state.z ~= pZ do turtle.forward(); end
 
 	-- Correct y position
-	while state.y > y do turtle.down(); end
-	while state.y < y do turtle.up(); end
+	while state.y > pY do turtle.down(); end
+	while state.y < pY do turtle.up(); end
 end
 
 turtle.goHome = function()
 	turtle.goto(state.home.x, state.home.y, state.home.z);
 	turtle.face(state.home.face);
+end
+
+turtle.clearSlot = function(pSlot)
+	turtle.select(pSlot);
+	turtle.refuel(true);
+	turtle.drop();
 end
 
 --[[
@@ -281,11 +300,11 @@ function clearInventory()
 	end
 end
 
--- Remove any unwanted items from slot STARTIDX onward
-function removeUnwanted(startIdx)
-	assert(startIdx >= 1 and startIdx <= 16);
+-- Remove any unwanted items from slot pStartIdx onward
+function removeUnwanted(pStartIdx)
+	assert(type(pStartIdx) == "number" and pStartIdx >= 1 and pStartIdx <= 16, "Invalid start idx " .. pStartIdx);
 
-	for i = startIdx, 16 do
+	for i = pStartIdx, 16 do
 		turtle.select(i);
 		turtle.refuel(true, 64);
 		turtle.drop();
@@ -295,16 +314,6 @@ end
 --[[
 	State machine
 --]]
-
--- Increase the position by one in the direction facing
-function incPosByFace() 
-	if state.face == NORTH then state.x = state.x + 1;
-	elseif state.face == SOUTH then state.x = state.x - 1;
-	elseif state.face == EAST then state.z = state.z + 1;
-	elseif state.face == WEST then state.z = state.z - 1;
-	else error("Turtle invalid face " .. state.face);
-	end
-end
 
 state = {
 	job = findFirstTree,
