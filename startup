@@ -98,14 +98,14 @@ function findMoreTrees()
 					if (state.y < state.home.y + 4) then 
 						turtle.up();
 					end
-				elseif turtle.getItemCount(3) > 0 then
+				elseif turtle.getItemCount(3) > 0 then                
 					-- Check is an unknown tree, if is cut it down using it all as fuel
 					turtle.select(3);
-					if turtle.compareUp() or turtle.compareDown() and turtle.refuel(true) then
+					if (turtle.compareUp() or turtle.compareDown()) and turtle.refuel(true) then
 						cutTree(3, 4);
 					-- Only avoid if not too high already
-					elseif (state.y < state.home.y + 4) then 
-						turtle.up();
+					elseif (state.y < state.home.y + 4) then
+					    turtle.up();
 					end
 					
 					turtle.clearSlot(3);
@@ -223,7 +223,7 @@ function findCoal()
         if turtle.placeUp() then
             turtle.digUp();
         -- If can't be placed and can refuel is coal
-        elseif turtle.refuel(true, 1); then
+        elseif turtle.refuel(true, 1) then
             if i ~= 5 then
             	storeItem(5, 12);
             	turtle.transferTo(5);
