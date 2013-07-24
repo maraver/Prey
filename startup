@@ -1,7 +1,7 @@
 --[[
-	Vars
-		Slot 1 = Logs
-		Slot 2 = Dirt
+    Vars
+        Slot 1 = Logs
+        Slot 2 = Dirt
         Slot 3 = Saplings
         Slot 4 = Cobblestone
         Slot 5 = Coal
@@ -276,6 +276,8 @@ end
 -- Cut down a tree and remove excess in overflow slot
 function cutTree(pTargSlot, pOverflow)
 	assert(type(pOverflow) == "number" and type(pTargSlot) == "number", "Slots must be numbers");
+
+    print("Cut tree at (" .. state.x .. "," .. state.z .. ")");
 
 	local startY = state.y;
 	
