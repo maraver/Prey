@@ -1,15 +1,10 @@
 --[[
     Vars
-        Slot 1 = Logs
-        Slot 2 = Dirt
-        Slot 3 = Cobblestone
-        Slot 4 = Saplings
-        Slot 5 = Coal
 --]]
-VER = 0.2;
+VER = 0.3;
 NORTH, EAST, SOUTH, WEST = 0, 1, 2, 3;
 
-LOG, DIRT, COBBLE, SAPLING, COAL = 1, 2, 3, 4, 5;
+LOG, SAPLING, DIRT, COBBLE, COAL = 1, 2, 3, 4, 5;
 
 ----------------------------------------------------------------------
 -- Tasks
@@ -20,8 +15,9 @@ LOG, DIRT, COBBLE, SAPLING, COAL = 1, 2, 3, 4, 5;
 		find first adjacent tree
 --]]
 function findFirstTree()
-	turtle.clearInventory();
+	turtle.removeUnwanted(LOG);
 	turtle.select(LOG);
+    
 	while true do
 		-- Get first wood
 		if turtle.detect() then
@@ -29,8 +25,9 @@ function findFirstTree()
 			
 			-- Check is wood
 			if turtle.refuel() then
-				-- Get second wood
 				turtle.forward();
+                setHomeToHere();
+                
 				turtle.up();
 				
 				-- Get rest of the wood
@@ -48,20 +45,8 @@ function findFirstTree()
 				-- Get back 1 wood
 				turtle.digDown();
 				
-				-- Goto start hight but here
-				turtle.goto(state.x, 0, state.z);
-				
-				-- Get dirt
-				turtle.select(2);
-				turtle.digDown();
-				
-				-- Move home location
-				state.home.x = state.x;
-				state.home.y = 2;
-				state.home.z = state.z;
-				
 				-- Next job
-				turtle.setJob(getCobblestone);
+				turtle.setJob(findMoreTrees);
 				break;
 			else
 				turtle.drop();
@@ -73,14 +58,122 @@ function findFirstTree()
 end
 
 --[[
-	Second Task:
+    Second Task:
+		find more near by trees
+--]]
+function findMoreTrees()
+	turtle.goto(state.home.x, state.home.y + 2, state.home.z);
+	
+	turtle.select(1);
+	local oldCount = turtle.getItemCount(1);
+	
+	-- loop
+	for sideLng = 1, 10 do
+		for corners = 0, 1 do
+			for xz = 1, sideLng do
+				turtle.forward();
+				
+				if turtle.getItemCount(1) > oldCount then
+					cutTree(1, 2);
+                    oldCount = turtle.getItemCount(1);
+				elseif turtle.getItemCount(2) > 0 then                
+                    turtle.select(2);
+					-- Check is an unknown tree, if is cut it down using it all as fuel
+					if (turtle.compareUp() or turtle.compareDown()) and turtle.refuel(true) then
+					    cutTree(2, 3);
+                        turtle.clearSlot(2);
+					else
+                        while (state.y < state.home.y + 4 and turtle.detect()) do 
+    					    turtle.up();
+                            turtle.clearSlot(2);
+					    end
+					end
+					
+					turtle.select(1);
+				end
+			end
+			turtle.turnRight();
+		end
+	end
+	
+    turtle.goHome();
+    
+	-- Refuel with sticks
+    turtle.select(1); -- Save a log
+    turtle.digUp();
+    turtle.placeUp();
+	turtle.craft();   -- Planks
+	turtle.transferTo(5, turtle.getItemCount(1) / 2);
+	turtle.craft();   -- Sticks
+	turtle.refuel(true, 64);
+    turtle.digUp();   -- Recover log
+    
+	turtle.setJob(findSaplings);
+end
+
+--[[
+	Third Task:
+		collect sapplings from first tree
+--]]
+function findSaplings()
+    turtle.goHome();
+    turtle.removeUnwanted(SAPLING);
+
+    local found = false;
+    for side=1, 4 do
+        for face=1, 4 do
+            turtle.turnRight();
+            turtle.suck();
+            
+            if not found then
+                -- Clear space if needed
+                if turtle.detectUp() then
+                    turtle.digUp();
+                end
+                
+                -- if can place is sapling
+                if turtle.placeUp() then
+                    turtle.breakUp();
+                    found = true;
+                else
+                    turtle.transferTo(11);
+                end
+            end
+        end
+        turtle.turnRight();
+        turtle.forward();
+        
+        -- On all but first side go forward twice
+        if side ~= 1 then 
+            turtle.forward();
+        end
+    end
+    
+    turtle.setJob(findDirt);
+end
+
+--[[
+    Fourth Task:
+        find dirt
+--]]
+function findDirt()
+    turtle.goHome();
+    turtle.removeUnwanted(DIRT);
+    
+    turtle.select(DIRT);    
+    turtle.digDown();
+    
+    turtle.setJob(findCobblestone);
+end
+
+--[[
+	Fourth Task:
 		find cobblestone
 --]]
-function getCobblestone()
-    -- Get any saplings that fell in dirt hole
-    turtle.goto(state.home.x, 0, state.home.z);
-    
+function findCobblestone()
+    turtle.goHome();
     turtle.removeUnwanted(COBBLE);
+    
     turtle.select(1);
     
     digToBedrock();
@@ -112,42 +205,6 @@ function getCobblestone()
     if highSlot ~= 4 then
         turtle.freeSlot(4, 16);
         turtle.freeSlot(highSlot, 4);
-    end
-    
-    turtle.setJob(findSaplings);
-end
-
---[[
-	Third Task:
-		collect sapplings from first tree
---]]
-function findSaplings()
-    -- Store the old sapling item
-    turtle.freeSlot(SAPLING, 14);
-    
-    local found = false;
-    for side=1, 4 do
-        for face=1, 4 do
-            turtle.turnRight();
-            turtle.suck();
-            
-            if not found then
-                -- if can't place not a sapling
-                if not turtle.placeUp() then
-                    turtle.transferTo(11);
-                else
-                    turtle.breakUp();
-                    found = true;
-                end
-            end
-        end
-        turtle.turnRight();
-        turtle.forward();
-        
-        -- On all but first side go forward twice
-        if side ~= 1 then 
-            turtle.forward();
-        end
     end
     
     turtle.setJob(findCoal);
@@ -196,64 +253,16 @@ function buildBase()
     turtle.select(4);
     turtle.face(NORTH);
     
+    
 
-    turtle.setJob(digIron);
-end
-
---[[
-    Task:
-		find more near by trees
---]]
-function findMoreTrees()
-	turtle.goHome();
-	
-	turtle.removeUnwanted(3);
-	turtle.select(1);
-	
-	local oldSlots = { [1] = turtle.getItemCount(1), [2] = turtle.getItemCount(2) };
-	
-	-- loop
-	for sideLng = 1, 10 do
-		for corners = 0, 1 do
-			for xz = 1, sideLng do
-				turtle.forward();
-				
-				if turtle.getItemCount(1) > oldSlots[1] then
-					oldSlots[1] = turtle.getItemCount(1);
-					cutTree(1, 3);
-				elseif turtle.getItemCount(2) > oldSlots[2] then
-					oldSlots[2] = turtle.getItemCount(2);
-					if (state.y < state.home.y + 4) then 
-						turtle.up();
-					end
-				elseif turtle.getItemCount(3) > 0 then                
-					-- Check is an unknown tree, if is cut it down using it all as fuel
-					turtle.select(3);
-					if (turtle.compareUp() or turtle.compareDown()) and turtle.refuel(true) then
-					    cutTree(3, 4);
-					-- Only avoid if not too high already
-					elseif (state.y < state.home.y + 4) then
-					    turtle.up();
-					end
-					
-					turtle.clearSlot(3);
-					turtle.select(1);
-				end
-			end
-			turtle.turnRight();
-		end
-	end
-	
-	turtle.removeUnwanted(3);
-	
-	turtle.setJob(findSaplings);
+    turtle.setJob(findIron);
 end
 
 --[[
     Task:
         go underground and mine a section looking for iron
 --]]
-function digIron()
+function findIron()
     turtle.select(1);
     turtle.forward();
     
@@ -261,40 +270,6 @@ function digIron()
     turtle.goto(state.x, 35, state.z);
     
     turtle.setJob(nil);
-end
-
-----------------------------------------------------------------------
--- Util
-----------------------------------------------------------------------
-
---[[
-	Common Functions
---]]
-
-function digToBedrock()
-    while not turtle.detectDown() or turtle.digDown() do
-        turtle.down();
-    end
-end
-
--- Cut down a tree and remove excess in overflow slot
-function cutTree(pTargSlot, pOverflow)
-	assert(type(pOverflow) == "number" and type(pTargSlot) == "number", "Slots must be numbers");
-
-    print("Cut tree at (" .. state.x .. "," .. state.z .. ")");
-
-	local startY = state.y;
-	
-	turtle.select(pTargSlot);
-	while turtle.compareUp() do turtle.up(); end
-	
-	turtle.goto(state.x, startY, state.z);
-	
-	while turtle.compareDown() do turtle.down(); end
-	
-	turtle.goto(state.x, startY, state.z);
-	
-	turtle.clearSlot(pOverflow);
 end
 
 --[[
@@ -469,6 +444,46 @@ turtle.setJob = function(pJob)
 	
 	state.prevJob = state.job;
 	state.job = pJob;
+end
+
+----------------------------------------------------------------------
+-- Util
+----------------------------------------------------------------------
+
+--[[
+    Common Functions
+--]]
+
+function digToBedrock()
+    while not turtle.detectDown() or turtle.digDown() do
+        turtle.down();
+    end
+end
+
+-- Cut down a tree and remove excess in overflow slot
+function cutTree(pTargSlot, pOverflow)
+	assert(type(pOverflow) == "number" and type(pTargSlot) == "number", "Slots must be numbers");
+
+    print("Cut tree at (" .. state.x .. "," .. state.z .. ")");
+
+	local startY = state.y;
+	
+	turtle.select(pTargSlot);
+	while turtle.compareUp() do turtle.up(); end
+	
+	turtle.goto(state.x, startY, state.z);
+	
+	while turtle.compareDown() do turtle.down(); end
+	
+	turtle.goto(state.x, startY, state.z);
+	
+	turtle.clearSlot(pOverflow);
+end
+
+function setHomeToHere()
+    state.home.x = state.x;
+    state.home.y = state.y;
+    state.home.z = state.z;
 end
 
 --[[
