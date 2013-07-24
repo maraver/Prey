@@ -20,7 +20,7 @@ LOG, DIRT, SAPLING, COBBLE, COAL = 1, 2, 3, 4, 5;
 		find first adjacent tree
 --]]
 function findFirstTree()
-	clearInventory();
+	turtle.clearInventory();
 	turtle.select(LOG);
 	while true do
 		-- Get first wood
@@ -228,7 +228,7 @@ function findCoal()
         -- If can't be placed and can refuel is coal
         elseif turtle.refuel(true) then
             if i ~= 5 then
-            	storeItem(5, 12);
+            	turtle.storeItem(5, 12);
             	turtle.transferTo(5);
             end
             break;
@@ -298,11 +298,6 @@ function cutTree(pTargSlot, pOverflow)
 	turtle.goto(state.x, startY, state.z);
 	
 	turtle.clearSlot(pOverflow);
-end
-
-function storeItem(pOldSlot, pNewSlot)
-    turtle.select(pOldSlot);
-    turtle.transferTo(pNewSlot);
 end
 
 --[[
@@ -406,6 +401,11 @@ end
 --[[
 	Turtle Util
 --]]
+turtle.storeItem = function(pOldSlot, pNewSlot)
+    turtle.select(pOldSlot);
+    turtle.transferTo(pNewSlot);
+end
+
 turtle.face = function(pFace)
 	assert(pFace >= 0 and pFace <= 3, "Invalid direction " .. pFace);
 	
