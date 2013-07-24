@@ -126,6 +126,11 @@ function findSaplings()
         
         turtle.select(3);
         turtle.suckDown();
+        
+        for i=1, 4 do
+        	turtle.turnRight();
+        	turtle.suck();
+        end
 end
 
 ----------------------------------------------------------------------
