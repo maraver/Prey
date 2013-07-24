@@ -112,8 +112,8 @@ function getCobblestone()
     
     -- Move cobblestone if needed
     if highSlot ~= 4 then
-        turtle.storeItem(4, 16);
-        turtle.storeItem(highSlot, 4);
+        turtle.freeSlot(4, 16);
+        turtle.freeSlot(highSlot, 4);
     end
     
     turtle.setJob(findSaplings);
@@ -125,7 +125,7 @@ end
 --]]
 function findSaplings()
     -- Store the old sapling item
-    turtle.storeItem(SAPLING, 14);
+    turtle.freeSlot(SAPLING, 14);
     
     local found = false;
     for side=1, 4 do
@@ -172,7 +172,7 @@ function findCoal()
         -- If can't be placed and can refuel is coal
         elseif turtle.refuel(true) then
             if i ~= 5 then
-            	turtle.storeItem(5, 12);
+            	turtle.freeSlot(5, 12);
             	turtle.transferTo(5);
             end
             break;
@@ -394,9 +394,9 @@ end
 --[[
 	Turtle Util
 --]]
-turtle.storeItem = function(pOldSlot, pNewSlot)
-    turtle.select(pOldSlot);
-    turtle.transferTo(pNewSlot);
+turtle.freeSlot = function(pToFreeSlot, pToStoreSlot)
+    turtle.select(pToFreeSlot);
+    turtle.transferTo(pToStoreSlot);
 end
 
 turtle.face = function(pFace)
