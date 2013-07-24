@@ -61,7 +61,7 @@ function findFirstTree()
 				state.home.z = state.z;
 				
 				-- Next job
-				turtle.setJob(findMoreTrees);
+				turtle.setJob(getCobblestone);
 				break;
 			else
 				turtle.drop();
@@ -159,7 +159,7 @@ function findSaplings()
         end
     end
     
-    turtle.setJob(getCobblestone);
+    turtle.setJob(findCoal);
 end
 
 --[[
@@ -205,7 +205,7 @@ function getCobblestone()
         turtle.transfterTo(4);
     end
     
-    turtle.setJob(findCoal);
+    turtle.setJob(findSaplings);
 end
 
 --[[
@@ -231,6 +231,10 @@ function findCoal()
             break;
         end
     end
+    
+    -- Refuel with all but 1 coal
+    turtle.select(5);
+    turtle.refuel(true, turtle.getItemCount(5) - 1);
 
     turtle.setJob(buildBase);
 end
