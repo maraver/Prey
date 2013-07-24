@@ -186,6 +186,9 @@ function getCobblestone()
     turtle.forward();
     turtle.goto(state.x, state.home.y, state.z);
     
+    -- Get any saplings that may have been there
+    turtle.suckUp();
+    
     -- Break surface if needed
     while turtle.detectUp() do turtle.up(); end
     
