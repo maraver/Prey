@@ -137,8 +137,8 @@ function findSaplings()
     local found = false;
     for side=1, 4 do
         for face=1, 4 do
-        	turtle.turnRight();
-        	turtle.suck();
+            turtle.turnRight();
+            turtle.suck();
             
             if not found then
                 -- if can't place not a sapling
