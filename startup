@@ -492,7 +492,7 @@ function cutTree(pTargSlot, pOverflow)
 	end
 	
 	-- Handle doesn't have log and none were above
-	if turtle.detectDown() and turtle.getItemCount(pTargSlot <= 0) then
+	if turtle.detectDown() and turtle.getItemCount(pTargSlot) <= 0 then
 		turtle.down();
 	end
 	
