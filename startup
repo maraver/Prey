@@ -15,17 +15,17 @@ LOG, SAPLING, DIRT, COBBLE, COAL = 1, 2, 3, 4, 5;
 		find first adjacent tree
 --]]
 function findFirstTree()
-	turtle.removeUnwanted(LOG);
-	turtle.select(LOG);
+    turtle.removeUnwanted(LOG);
+    turtle.select(LOG);
     
-	while true do
-		-- Get first wood
-		if turtle.detect() then
-			turtle.dig();
-			
-			-- Check is wood
-			if turtle.refuel() then
-				turtle.forward();
+    while true do
+        -- Get first wood
+        if turtle.detect() then
+            turtle.dig();
+                
+            -- Check is wood
+            if turtle.refuel() then
+                turtle.forward();
                 setHomeToHere();
                 
 				turtle.up();
