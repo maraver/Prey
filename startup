@@ -22,7 +22,7 @@ function findFirstTree()
 			if turtle.refuel() then
 				-- Get second wood
 				turtle.forward();
-				turtle.digUp();
+				turtle.up();
 				
 				-- Get rest of the wood
 				while turtle.compareUp() do turtle.up(); end
@@ -96,6 +96,7 @@ function findMoreTrees()
 						turtle.up(); 
 					end
 					removeUnwanted(3);
+					turtle.select(0);
 				end
 			end
 			turtle.turnRight();
