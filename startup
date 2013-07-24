@@ -214,7 +214,10 @@ function findCoal()
             turtle.digUp();
         -- If can't be placed and can refuel is coal
         elseif turtle.refuel(true, 1); then
-            storeItem(5, 12);
+            if i ~= 5 then
+            	storeItem(5, 12);
+            	turtle.transferTo(5);
+            end
             break;
         end
     end
@@ -223,6 +226,7 @@ function findCoal()
 end
 
 function digIron()
+    turtle.select(1);
     turtle.forward();
     
     -- Ore commong from (30-40)
