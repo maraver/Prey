@@ -84,9 +84,7 @@ function getCobblestone()
     turtle.removeUnwanted(COBBLE);
     turtle.select(COBBLE);
     
-    while turtle.digDown() do
-        turtle.down();
-    end
+    digToBedrock();
     
     -- Hit bottom, save height
     state.home.y = state.y;
@@ -272,6 +270,12 @@ end
 --[[
 	Common Functions
 --]]
+
+function digToBedrock()
+    while not turtle.detectDown() or turtle.digDown() do
+        turtle.down();
+    end
+end
 
 -- Cut down a tree and remove excess in overflow slot
 function cutTree(pTargSlot, pOverflow)
