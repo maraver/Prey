@@ -122,15 +122,31 @@ end
 		collect sapplings from first tree
 --]]
 function findSaplings()
-	turtle.goto(state.home.x, 0, state.home.z);
-        
-        turtle.select(3);
-        turtle.suckDown();
-        
-        for i=1, 4 do
+    turtle.select(1);
+	turtle.goto(state.home.x + NORTH, 0, state.home.z);
+    turtle.face(NORTH);
+    
+    -- Remove any unwanted items from going home
+    turtle.removeUnwanted(3);
+    turtle.select(3);
+    
+    for side=1, 4 do
+        for face=1, 4 do
         	turtle.turnRight();
         	turtle.suck();
         end
+        turtle.turnRight();
+        turtle.forward();
+        
+        -- On all but first side go forward twice
+        if side ~= 1 then 
+            turtle.forward();
+        end
+    end
+    
+    turtle.home.y = 0;
+    turtle.goHome();
+    turtle.suckDown();
 end
 
 ----------------------------------------------------------------------
