@@ -1,1 +1,328 @@
-turtle.turnRight();
+--[[
+	Vars
+		Slot 1 = Logs
+		Slot 2 = Dirt
+--]]
+NORTH, EAST, SOUTH, WEST = 0, 1, 2, 3;
+
+--[[
+	First task:
+		find first adjacent tree
+--]]
+function findFirstTree()
+	clearInventory();
+	turtle.select(1);
+	while true do
+		-- Get first wood
+		if turtle.detect() then
+			turtle.dig();
+			
+			-- Check is wood
+			if turtle.refuel() then
+				-- Get second wood
+				turtle.forward();
+				turtle.digUp();
+				
+				-- Refuel with second wood
+				turtle.craft();
+				turtle.transferTo(5, 2);
+				turtle.craft();
+				turtle.refuel(true, 8);
+				
+				-- Get dirt
+				turtle.select(2);
+				turtle.digDown();
+				
+				-- Get third wood
+				turtle.select(1);
+				turtle.up();
+				turtle.up();
+				
+				-- Get rest of the wood
+				while turtle.compareUp() do turtle.up(); end
+				
+				-- Move home location
+				state.home.x = state.x;
+				state.home.y = 2;
+				state.home.z = state.z;
+				turtle.goHome();
+				
+				-- Next job
+				turtle.setJob(findMoreTrees);
+				break;
+			else
+				turtle.drop();
+			end
+		else
+			turtle.turnRight();
+		end
+	end
+end
+
+--[[
+	Second task:
+		find more near by trees
+--]]
+function findMoreTrees()
+	removeUnwanted(3);
+	turtle.select(1);
+	
+	local oldSlots = { [1] = turtle.getItemCount(1), [2] = turtle.getItemCount(2) };
+	
+	-- loop
+	local sideLng = 1;
+	while sideLng <= 6 do
+		for sides = 0, 1 do
+			for xz = 1, sideLng do
+				turtle.forward();
+				
+				if turtle.getItemCount(1) > oldSlots[1] then
+					oldSlots[1] = turtle.getItemCount(1);
+					cutTree();
+				elseif turtle.getItemCount(2) > oldSlots[2] then
+					oldSlots[2] = turtle.getItemCount(2);
+					if (state.y < state.home.y + 4) then 
+						turtle.up();
+					end
+				elseif turtle.getItemCount(3) > 0 then
+					if (state.y < state.home.y + 4) then 
+						turtle.up(); 
+					end
+					removeUnwanted(3);
+				end
+			end
+			turtle.turnRight();
+		end
+		sideLng = sideLng + 1;
+	end
+	
+	turtle.goHome()
+	turtle.setJob(nil);
+end
+
+--[[
+	Common Functions
+--]]
+
+
+--[[
+	New Turtle Util
+--]]
+oldTurtle = {
+	turnRight = turtle.turnRight, turnLeft = turtle.turnLeft,
+	forward = turtle.forward, back = turtle.back,
+	up = turtle.up, down = turtle.down,
+	refuel = turtle.refuel
+};
+
+turtle.setJob = function(job)
+	assert(job == nil or type(job) == "function");
+	
+	state.prevJob = state.job;
+	state.job = job;
+end
+
+turtle.refuel = function(force, amount)	
+	if force or turtle.getFuelLevel() < 1 then
+		if amount == nil then amount = 1; end
+
+		-- Find a fuel to use
+		for slot,isFuel in pairs(state.fuelSlots) do
+			if (isFuel and turtle.getItemCount(slot) > amount) then
+				turtle.select(slot);
+				break;
+			end
+		end
+	
+		return oldTurtle.refuel(amount);
+	else
+		return true;
+	end
+end
+
+turtle.back = function()
+	turtle.turnRight();
+	turtle.turnRight();
+	if turtle.forward() then
+		turtle.turnLeft();
+		turtle.turnLeft();
+	
+		return true;
+	else
+		return false;
+	end
+end
+
+turtle.forward = function()
+	turtle.refuel();
+
+	if turtle.detect() then turtle.dig(); end
+	
+	if oldTurtle.forward() then
+		incPosByFace();
+		return true;
+	else
+		while turtle.attack() do end
+		
+		if oldTurtle.forward() then
+			incPosByFace();
+			return true;
+		end
+	end
+end
+	
+turtle.up = function()
+	turtle.refuel();
+
+	if turtle.detectUp() then turtle.digUp(); end
+
+	if oldTurtle.up() then
+		state.y = state.y + 1;
+		return true;
+	else
+		-- Try and kill whatever is blocking
+		while turtle.attackUp() do end
+		
+		-- Try going up one more time
+		if oldTurtle.up() then
+			state.y = state.y + 1;
+			return true;
+		end
+	end
+end
+
+turtle.down = function()
+	turtle.refuel();
+
+	if turtle.detectDown() then turtle.digDown(); end
+
+	if oldTurtle.down() then
+		state.y = state.y - 1;
+		return true;
+	else
+		-- Try and kill whatever is blocking
+		while turtle.attackDown() do end
+		
+		-- Try going down one more time
+		if oldTurtle.down() then
+			state.y = state.y - 1;
+			return true;
+		end
+	end
+end
+
+turtle.turnRight = function()
+	oldTurtle.turnRight();
+	state.face = (state.face + 1) % 4;
+	return true;
+end
+
+turtle.turnLeft = function()
+	oldTurtle.turnLeft();
+	if state.face == 0 then
+		state.face = 3;
+	else
+		state.face = state.face - 1;
+	end
+	return true;
+end
+
+turtle.face = function(dir)
+	assert(dir >= 0 and dir <= 3, "Invalid direction " .. dir);
+	
+	while (dir > state.face) do turtle.turnRight(); end
+	while (dir < state.face) do turtle.turnLeft(); end
+end
+
+turtle.goto = function(x, y, z)
+	assert(type(x) == "number" and type(y) == "number" and type(z) == "number");
+	
+	-- Correct x position
+	if state.x > x then
+		turtle.face(SOUTH);
+	elseif state.x < x then
+		turtle.face(NORTH);
+	end	
+	
+	while state.x ~= x do turtle.forward(); end
+	
+	-- Correcy z position
+	if state.z > z then
+		turtle.face(WEST);
+	elseif state.z < z then
+		turtle.face(EAST);
+	end
+	while state.z ~= z do turtle.forward(); end
+
+	-- Correct y position
+	while state.y > y do turtle.down(); end
+	while state.y < y do turtle.up(); end
+end
+
+turtle.goHome = function()
+	turtle.goto(state.home.x, state.home.y, state.home.z);
+	turtle.face(state.home.face);
+end
+
+--[[
+	Util
+--]]
+function clearInventory()
+	for i = 1, 16 do
+		turtle.select(i);
+		turtle.drop();
+	end
+end
+
+-- Remove any unwanted items from slot STARTIDX onward
+function removeUnwanted(startIdx)
+	assert(startIdx >= 1 and startIdx <= 16);
+
+	for i = startIdx, 16 do
+		turtle.select(i);
+		turtle.refuel(true, 64);
+		turtle.drop();
+	end
+end
+
+--[[
+	State machine
+--]]
+
+-- Increase the position by one in the direction facing
+function incPosByFace() 
+	if state.face == NORTH then state.x = state.x + 1;
+	elseif state.face == SOUTH then state.x = state.x - 1;
+	elseif state.face == EAST then state.z = state.z + 1;
+	elseif state.face == WEST then state.z = state.z - 1;
+	else error("Turtle invalid face " .. state.face);
+	end
+end
+
+state = {
+	job = findFirstTree,
+	prevJob = nil,
+	
+	x = 0,
+	y = 0,
+	z = 0,
+	face = 0,
+	
+	home = {
+		x = 0,
+		y = 0,
+		z = 0,
+		face = 0
+	},
+	
+	fuelSlots = { [1] = true }
+};
+
+---------------------
+-- Start
+---------------------
+while state.job ~= nil do
+	state.job();
+end
+
+print("Done");
