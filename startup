@@ -285,9 +285,12 @@ turtle.refuel = function(pForce, pAmount)
 	if pForce or turtle.getFuelLevel() < 1 then
 		if pAmount == nil then pAmount = 1; end
 	
-		local success = oldTurtle.refuel(pAmount);
-		print(" - New fuel level " .. turtle.getFuelLevel());
-		return success;
+		if oldTurtle.refuel(pAmount) then
+		    print(" - New fuel level " .. turtle.getFuelLevel());
+		    return true;
+        else
+            return false;
+        end
 	else
 		return true;
 	end
