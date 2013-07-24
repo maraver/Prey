@@ -9,6 +9,8 @@
 VER = 0.2;
 NORTH, EAST, SOUTH, WEST = 0, 1, 2, 3;
 
+LOG, DIRT, SAPLING, COBBLE, COAL = 1, 2, 3, 4, 5;
+
 ----------------------------------------------------------------------
 -- Tasks
 ----------------------------------------------------------------------
@@ -19,7 +21,7 @@ NORTH, EAST, SOUTH, WEST = 0, 1, 2, 3;
 --]]
 function findFirstTree()
 	clearInventory();
-	turtle.select(1);
+	turtle.select(LOG);
 	while true do
 		-- Get first wood
 		if turtle.detect() then
@@ -71,7 +73,7 @@ function findFirstTree()
 end
 
 --[[
-	Second Task:
+    Second Task:
 		find more near by trees
 --]]
 function findMoreTrees()
@@ -130,12 +132,23 @@ function findSaplings()
     
     -- Remove any unwanted items from going home
     turtle.removeUnwanted(3);
-    turtle.select(3);
+    turtle.select(SAPLING);
     
+    local found = false;
     for side=1, 4 do
         for face=1, 4 do
         	turtle.turnRight();
         	turtle.suck();
+            
+            if not found then
+                -- if can't place not a sapling
+                if not turtle.placeUp() then
+                    turtle.transferTo(11);
+                else
+                    turtle.breakUp();
+                    found = true;
+                end
+            end
         end
         turtle.turnRight();
         turtle.forward();
@@ -146,29 +159,17 @@ function findSaplings()
         end
     end
     
-    turtle.home.y = 0;
-    turtle.goHome();
-    turtle.suckDown();
-    
-    turtle.setJob(buildBase);
-end
-
---[[
-    Fourth Task:
-        build a base
---]]
-function buildBase()
-    
-
     turtle.setJob(getCobblestone);
 end
 
 --[[
-	Fifth Task:
+	Fourth Task:
 		find cobblestone
 --]]
 function getCobblestone()
-    turtle.goHome();
+    -- Get any saplings that fell in dirt hole
+    turtle.goto(turtle.home.x, 0, turtle.home.z);
+    turtle.suckDown();
     
     turtle.removeUnwanted(4);
     turtle.select(4);
@@ -208,7 +209,7 @@ function getCobblestone()
 end
 
 --[[
-    Sixth Task:
+    Fifth Task:
         using items from find cobblestone determine which is coal
 --]]
 function findCoal()    
@@ -231,11 +232,27 @@ function findCoal()
         end
     end
 
+    turtle.setJob(buildBase);
+end
+
+--[[
+    Task:
+        build a base
+--]]
+function buildBase()
+    -- Finalize home
+    state.home.y = state.home.y + 11;
+    turtle.goto(state.home.x, state.home.y - 1, state.home.z);
+    
+    turtle.select(4);
+    turtle.face(NORTH);
+    
+
     turtle.setJob(digIron);
 end
 
 --[[
-    Seventh Task:
+    Task:
         go underground and mine a section looking for iron
 --]]
 function digIron()
