@@ -28,29 +28,28 @@ function findFirstTree()
                 turtle.forward();
                 setHomeToHere();
                 
-				turtle.up();
-				
-				-- Get rest of the wood
-				while turtle.compareUp() do turtle.up(); end
-				
-				-- Save 1 wood
-				turtle.placeDown();
-				
-				-- Refuel with sticks
-				turtle.craft();
-				turtle.transferTo(5, turtle.getItemCount(1) / 2);
-				turtle.craft();
-				turtle.refuel(true, 64);
-				
-				-- Get back 1 wood
-				turtle.digDown();
-				
-				-- Next job
-				turtle.setJob(findMoreTrees);
-				break;
-			else
-				turtle.drop();
-			end
+                -- Get second wood
+            	turtle.up();
+            	
+            	-- Get rest of the wood
+            	while turtle.compareUp() do 
+                    turtle.up(); 
+                end
+            	
+            	-- Refuel with sticks
+                turtle.placeDown(); -- Save wood
+            	turtle.craft();     -- Planks
+            	turtle.transferTo(5, turtle.getItemCount(1) / 2);
+            	turtle.craft();     -- Sticks
+            	turtle.refuel(true, 64);
+            	turtle.digDown();   -- Recover wood
+            	
+            	-- Next job
+            	turtle.setJob(findMoreTrees);
+            	break;
+            else
+            	turtle.drop();
+            end
 		else
 			turtle.turnLeft();
 		end
