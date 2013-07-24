@@ -32,9 +32,11 @@ function findFirstTree()
             	turtle.up();
             	
             	-- Get rest of the wood
-            	while turtle.compareUp() do 
-                    turtle.up(); 
-                end
+            	local gotEverything = cutTree(1,2);
+            	if not gotEverything then
+            		print(" - This tree is too big!");
+            		exit();
+            	end
             	
             	-- Refuel with sticks
                 turtle.placeDown(); -- Save wood
@@ -471,12 +473,13 @@ function digToBedrock()
 end
 
 -- Cut down a tree and remove excess in overflow slot
+-- Return true if got everything
 function cutTree(pTargSlot, pOverflow)
 	assert(type(pOverflow) == "number" and type(pTargSlot) == "number", "Slots must be numbers");
 
     print(" - Cut tree at (" .. state.x .. "," .. state.z .. ")");
 
-	local startY = state.y;
+	local startY, startFace = state.y, state.face;
 	
 	turtle.select(pTargSlot);
 	
@@ -496,11 +499,28 @@ function cutTree(pTargSlot, pOverflow)
 		turtle.down();
 	end
 	
-	while turtle.compareDown() do turtle.down(); end
+	local gotEverything = true;
+	while state.y > startY or turtle.compareDown() do
+		-- Confirm there are no other logs
+		if gotEverything then
+			for i=1, 4 do
+				if turtle.compare() then
+					gotEverything = false;
+					break;
+				end
+				
+				-- 270 degree not 360, resets face below
+				if 1 ~= 4 then turtle.turnRight(); end
+			end
+		end
 	
-	turtle.goto(state.x, startY, state.z);
+		turtle.down(); 
+	end
 	
+	turtle.face(startFace);
 	turtle.clearSlot(pOverflow);
+	
+	return gotEverything;
 end
 
 function setHomeToHere()
