@@ -32,7 +32,7 @@ function findFirstTree()
             	turtle.up();
             	
             	-- Get rest of the wood
-            	local gotEverything = cutTree(1, 2, true);
+            	local gotEverything = cutTree(1, 2, false);
             	if not gotEverything then
             		print(" - This tree is too big!");
             		exit();
