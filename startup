@@ -32,7 +32,7 @@ function findFirstTree()
             	turtle.up();
             	
             	-- Get rest of the wood
-            	local gotEverything = cutTree(1,2);
+            	local gotEverything = cutTree(1, 2, true);
             	if not gotEverything then
             		print(" - This tree is too big!");
             		exit();
@@ -474,10 +474,12 @@ end
 
 -- Cut down a tree and remove excess in overflow slot
 -- Return true if got everything
-function cutTree(pTargSlot, pOverflow)
+function cutTree(pTargSlot, pOverflow, pIgnoreBranches)
+	-- Type check
 	assert(type(pOverflow) == "number" and type(pTargSlot) == "number", "Slots must be numbers");
+	if type(pIgnoreBranches) ~= "boolean" then pIgnoreBranches = true; end
 
-    print(" - Cut tree at (" .. state.x .. "," .. state.z .. ")");
+    	print(" - Cut tree at (" .. state.x .. "," .. state.z .. ")");
 
 	local startY, startFace = state.y, state.face;
 	
@@ -499,13 +501,13 @@ function cutTree(pTargSlot, pOverflow)
 		turtle.down();
 	end
 	
-	local gotEverything = true;
+	local pGotEverything = true;
 	while state.y > startY or turtle.compareDown() do
 		-- Confirm there are no other logs
-		if gotEverything then
+		if pGotEverything and not pIgnoreBranches then
 			for i=1, 4 do
 				if turtle.compare() then
-					gotEverything = false;
+					pGotEverything = false;
 					break;
 				end
 				
@@ -520,7 +522,7 @@ function cutTree(pTargSlot, pOverflow)
 	turtle.face(startFace);
 	turtle.clearSlot(pOverflow);
 	
-	return gotEverything;
+	return pGotEverything;
 end
 
 function setHomeToHere()
