@@ -2,7 +2,9 @@
 	Vars
 		Slot 1 = Logs
 		Slot 2 = Dirt
-                Slot 3 = Saplings
+        Slot 3 = Saplings
+        Slot 4 = Cobblestone
+        Slot 5 = Coal
 --]]
 VER = 0.2;
 NORTH, EAST, SOUTH, WEST = 0, 1, 2, 3;
@@ -147,6 +149,86 @@ function findSaplings()
     turtle.home.y = 0;
     turtle.goHome();
     turtle.suckDown();
+    
+    turtle.setJob(getCobblestone);
+end
+
+--[[
+	Fourth Task:
+		find cobblestone
+--]]
+function getCobblestone()
+    turtle.goHome();
+    
+    turtle.removeUnwanted(4);
+    turtle.select(4);
+    
+    while turtle.digDown() do
+        turtle.down();
+    end
+    
+    -- Hit bottom, save height
+    state.home.y = state.y;
+    state.y = 0;
+    
+    -- Dig to top
+    turtle.forward();
+    turtle.goto(state.x, state.home.y, state.z);
+    
+    -- Break surface if needed
+    while turtle.detectUp() do turtle.up(); end
+    
+    -- Cobble must be one of first new blocks broken
+    local highSlot, highSlotCount = 4, turtle.getItemCount(highSlot);
+    for slot = 5, 10 do
+        if turtle.getItemCount(slot) > highSlotCount then
+            highSlot = slot;
+        end
+    end
+    
+    
+    -- Move cobblestone if needed
+    if highSlot ~= 4 then
+        storeItem(4, 16);
+        
+        turtle.select(highSlot);
+        turtle.transfterTo(4);
+    end
+    
+    turtle.setJob(findCoal);
+end
+
+--[[
+    Fifth Task:
+        using items from find cobblestone determine which is coal
+--]]
+function findCoal()    
+    -- Clear a space for placing
+    turtle.digUp();
+    
+    for i=5, 16 do
+        turtle.select(i);
+        
+        -- If can be placed not coal
+        if turtle.placeUp() then
+            turtle.digUp();
+        -- If can't be placed and can refuel is coal
+        elseif turtle.refuel(true, 1); then
+            storeItem(5, 12);
+            break;
+        end
+    end
+
+    turtle.setJob(digIron);
+end
+
+function digIron()
+    turtle.forward();
+    
+    -- Ore commong from (30-40)
+    turtle.goto(state.x, 35, state.z);
+    
+    turtle.setJob(nil);
 end
 
 ----------------------------------------------------------------------
@@ -173,6 +255,11 @@ function cutTree(pTargSlot, pOverflow)
 	turtle.goto(state.x, startY, state.z);
 	
 	turtle.clearSlot(pOverflow);
+end
+
+function storeItem(pOldSlot, pNewSlot)
+    turtle.select(pOldSlot);
+    turtle.transferTo(pNewSlot);
 end
 
 --[[
