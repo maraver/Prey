@@ -223,7 +223,7 @@ function findCoal()
         if turtle.placeUp() then
             turtle.digUp();
         -- If can't be placed and can refuel is coal
-        elseif turtle.refuel(true, 1) then
+        elseif turtle.refuel(true) then
             if i ~= 5 then
             	storeItem(5, 12);
             	turtle.transferTo(5);
