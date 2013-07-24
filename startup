@@ -84,6 +84,7 @@ function getCobblestone()
     turtle.select(1);
     
     digToBedrock();
+    turtle.goto(state.x, state.y + 9, state.z);
     
     -- Hit bottom, save height
     state.home.y = state.y;
