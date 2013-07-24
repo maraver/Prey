@@ -1,10 +1,10 @@
 --[[
     Vars
 --]]
-VER = 0.3;
+VER = 0.4;
 NORTH, EAST, SOUTH, WEST = 0, 1, 2, 3;
 
-LOG, SAPLING, DIRT, COBBLE, COAL = 1, 2, 3, 4, 5;
+LOG, DIRT, SAPLING, COBBLE, COAL = 1, 2, 3, 4, 5;
 
 ----------------------------------------------------------------------
 -- Tasks
@@ -101,11 +101,25 @@ function findMoreTrees()
 	turtle.refuel(true, 64);
     turtle.digUp();   -- Recover log
     
-	turtle.setJob(findSaplings);
+	turtle.setJob(findDirt);
 end
 
 --[[
-	Third Task:
+    Third Task:
+        find dirt
+--]]
+function findDirt()
+    turtle.goHome();
+    turtle.removeUnwanted(DIRT);
+    
+    turtle.select(DIRT);    
+    turtle.digDown();
+    
+    turtle.setJob(findSaplings);
+end
+
+--[[
+	Fourth Task:
 		collect sapplings from first tree
 --]]
 function findSaplings()
@@ -118,21 +132,25 @@ function findSaplings()
     for side=1, 4 do
         for face=1, 4 do
             turtle.turnRight();
-            turtle.suck();
             
-            if not found then
-                -- Clear space if needed
-                if turtle.detectUp() then
-                    turtle.digUp();
+            -- If picked up something and hasn't found sapling
+            if turtle.suck() and not found then 
+                -- Make check area
+                turtle.up();
+                turtle.select(DIRT);
+                turtle.placeDown();
+                turtle.up();
+                if turtle.detectUp() then turtle.digUp(); end
+                
+                turtle.select(SAPLING);
+                if not turtle.placeUp() and turtle.placeDown() then
+                	turtle.breakDown();
+                    found = true;
                 end
                 
-                -- if can place is sapling
-                if turtle.placeUp() then
-                    turtle.breakUp();
-                    found = true;
-                else
-                    turtle.transferTo(11);
-                end
+                turtle.down();
+                turtle.select(DIRT);
+                turtle.down();
             end
         end
         turtle.turnRight();
@@ -142,21 +160,13 @@ function findSaplings()
         if side ~= 1 then 
             turtle.forward();
         end
+        
+        turtle.select(SAPLING);
+        if not found then
+        	-- Keep sapling slot clean without dropping
+        	turtle.transfterTo(SAPLING + 2);
+        end
     end
-    
-    turtle.setJob(findDirt);
-end
-
---[[
-    Fourth Task:
-        find dirt
---]]
-function findDirt()
-    turtle.goHome();
-    turtle.removeUnwanted(DIRT);
-    
-    turtle.select(DIRT);    
-    turtle.digDown();
     
     turtle.setJob(findCobblestone);
 end
