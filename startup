@@ -1,7 +1,7 @@
 --[[
     Vars
 --]]
-VER = 0.4;
+VER = 0.5;
 NORTH, EAST, SOUTH, WEST = 0, 1, 2, 3;
 
 LOG, DIRT, SAPLING, COBBLE, COAL = 1, 2, 3, 4, 5;
