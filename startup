@@ -175,7 +175,7 @@ function findCobblestone()
     turtle.goto(state.x, state.y + 9, state.z);
     
     -- Hit bottom, save height
-    state.home.y = state.y;
+    state.home.y = -state.y;
     state.y = 0;
     
     -- Dig to top
