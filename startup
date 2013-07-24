@@ -23,23 +23,27 @@ function findFirstTree()
 				turtle.forward();
 				turtle.digUp();
 				
-				-- Refuel with second wood
+				-- Get rest of the wood
+				while turtle.compareUp() do turtle.up(); end
+				
+				-- Save 1 wood
+				turtle.placeDown();
+				
+				-- Refuel with sticks
 				turtle.craft();
-				turtle.transferTo(5, 2);
+				turtle.transferTo(5, turtle.getItemCount(1) / 2);
 				turtle.craft();
-				turtle.refuel(true, 8);
+				turtle.refuel(true, 64);
+				
+				-- Get back 1 wood
+				turtle.digDown();
+				
+				-- Goto start hight but here
+				turtle.goto(state.x, 0, state.z);
 				
 				-- Get dirt
 				turtle.select(2);
 				turtle.digDown();
-				
-				-- Get third wood
-				turtle.select(1);
-				turtle.up();
-				turtle.up();
-				
-				-- Get rest of the wood
-				while turtle.compareUp() do turtle.up(); end
 				
 				-- Move home location
 				state.home.x = state.x;
@@ -64,15 +68,17 @@ end
 		find more near by trees
 --]]
 function findMoreTrees()
+	-- Use all but 1 log to fuel
+	turtle.refuel(true, turtle.getItemCount(1) - 1);
+	
 	removeUnwanted(3);
 	turtle.select(1);
 	
 	local oldSlots = { [1] = turtle.getItemCount(1), [2] = turtle.getItemCount(2) };
 	
 	-- loop
-	local sideLng = 1;
-	while sideLng <= 6 do
-		for sides = 0, 1 do
+	for sideLng = 1, 10 do
+		for corners = 0, 1 do
 			for xz = 1, sideLng do
 				turtle.forward();
 				
@@ -93,7 +99,6 @@ function findMoreTrees()
 			end
 			turtle.turnRight();
 		end
-		sideLng = sideLng + 1;
 	end
 	
 	turtle.goHome()
