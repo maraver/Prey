@@ -479,9 +479,22 @@ function cutTree(pTargSlot, pOverflow)
 	local startY = state.y;
 	
 	turtle.select(pTargSlot);
-	while turtle.compareUp() do turtle.up(); end
 	
-	turtle.goto(state.x, startY, state.z);
+	-- Handle doesn't have log
+	if turtle.detectUp() then
+		if turtle.getItemCount(pTargSlot <= 0)  then
+			turtle.up();
+		end
+		
+		while turtle.compareUp() do turtle.up(); end
+		
+		turtle.goto(state.x, startY, state.z);=
+	end
+	
+	-- Handle doesn't have log and none were above
+	if turtle.detectDown() and turtle.getItemCount(pTargSlot <= 0) then
+		turtle.down();
+	end
 	
 	while turtle.compareDown() do turtle.down(); end
 	
