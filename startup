@@ -285,7 +285,9 @@ turtle.refuel = function(pForce, pAmount)
 	if pForce or turtle.getFuelLevel() < 1 then
 		if pAmount == nil then pAmount = 1; end
 	
-		return oldTurtle.refuel(pAmount);
+		local success = oldTurtle.refuel(pAmount);
+		print(" - New fuel level " .. turtle.getFuelLevel());
+		return success;
 	else
 		return true;
 	end
@@ -463,7 +465,7 @@ end
 function cutTree(pTargSlot, pOverflow)
 	assert(type(pOverflow) == "number" and type(pTargSlot) == "number", "Slots must be numbers");
 
-    print("Cut tree at (" .. state.x .. "," .. state.z .. ")");
+    print(" - Cut tree at (" .. state.x .. "," .. state.z .. ")");
 
 	local startY = state.y;
 	
@@ -511,7 +513,7 @@ state = {
 print("Running Prey v" .. VER);
 
 while state.job ~= nil do
-	print("Job " .. tostring(state.job));
+	print("* New Job " .. tostring(state.job));
 	state.job();
 end
 
