@@ -63,13 +63,13 @@ end
 function findMoreTrees()
 	turtle.goto(state.home.x, state.home.y + 2, state.home.z);
 	
-	turtle.select(1);
 	local oldCount = turtle.getItemCount(1);
 	
 	-- loop
 	for sideLng = 1, 10 do
 		for corners = 0, 1 do
 			for xz = 1, sideLng do
+				turtle.select(1);
 				turtle.forward();
 				
 				if turtle.getItemCount(1) > oldCount then
@@ -87,8 +87,6 @@ function findMoreTrees()
                 			turtle.clearSlot(2);
 					    end
 					end
-					
-					turtle.select(1);
 				end
 			end
 			turtle.turnRight();
