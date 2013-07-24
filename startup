@@ -74,17 +74,17 @@ function findMoreTrees()
 				
 				if turtle.getItemCount(1) > oldCount then
 					cutTree(1, 2);
-                    oldCount = turtle.getItemCount(1);
+        			oldCount = turtle.getItemCount(1);
 				elseif turtle.getItemCount(2) > 0 then                
-                    turtle.select(2);
+        			turtle.select(2);
 					-- Check is an unknown tree, if is cut it down using it all as fuel
 					if (turtle.compareUp() or turtle.compareDown()) and turtle.refuel(true) then
 					    cutTree(2, 3);
-                        turtle.clearSlot(2);
+            			turtle.clearSlot(2);
 					else
-                        while (state.y < state.home.y + 4 and turtle.detect()) do 
-    					    turtle.up();
-                            turtle.clearSlot(2);
+        				while (state.y < state.home.y + 4 and turtle.detect()) do 
+					    	turtle.up();
+                			turtle.clearSlot(2);
 					    end
 					end
 					
