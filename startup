@@ -125,7 +125,7 @@ end
 --]]
 function findSaplings()
     turtle.select(1);
-	turtle.goto(state.home.x + NORTH, 0, state.home.z);
+    turtle.goto(state.home.x + NORTH, 0, state.home.z);
     turtle.face(NORTH);
     
     -- Remove any unwanted items from going home
@@ -150,11 +150,21 @@ function findSaplings()
     turtle.goHome();
     turtle.suckDown();
     
+    turtle.setJob(buildBase);
+end
+
+--[[
+    Fourth Task:
+        build a base
+--]]
+function buildBase()
+    
+
     turtle.setJob(getCobblestone);
 end
 
 --[[
-	Fourth Task:
+	Fifth Task:
 		find cobblestone
 --]]
 function getCobblestone()
@@ -186,7 +196,6 @@ function getCobblestone()
         end
     end
     
-    
     -- Move cobblestone if needed
     if highSlot ~= 4 then
         storeItem(4, 16);
@@ -199,7 +208,7 @@ function getCobblestone()
 end
 
 --[[
-    Fifth Task:
+    Sixth Task:
         using items from find cobblestone determine which is coal
 --]]
 function findCoal()    
@@ -225,6 +234,10 @@ function findCoal()
     turtle.setJob(digIron);
 end
 
+--[[
+    Seventh Task:
+        go underground and mine a section looking for iron
+--]]
 function digIron()
     turtle.select(1);
     turtle.forward();
