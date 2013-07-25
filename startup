@@ -316,6 +316,7 @@ turtle.forward = function()
 	else error("Turtle invalid face " .. state.face);
 	end
 	
+	saveState();
 	return true;
 end
 	
@@ -330,6 +331,8 @@ turtle.up = function()
 	end
 	
 	state.y = state.y + 1;
+	
+	saveState();
 	return true;
 end
 
@@ -344,12 +347,16 @@ turtle.down = function()
 	end
 
 	state.y = state.y - 1;
+	
+	saveState();
 	return true;
 end
 
 turtle.turnRight = function()
 	oldTurtle.turnRight();
 	state.face = (state.face + 1) % 4;
+	
+	saveState();
 	return true;
 end
 
@@ -360,6 +367,8 @@ turtle.turnLeft = function()
 	else
 		state.face = state.face - 1;
 	end
+	
+	saveState();
 	return true;
 end
 
