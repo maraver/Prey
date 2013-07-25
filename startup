@@ -148,7 +148,8 @@ end
 		collect sapplings from first tree
 --]]
 function findSaplings()
-    turtle.goto(state.home.x + (NORTH * 2), state.home.y, state.home.z + (WEST * 2));
+	-- Go 2 north and 2 west
+    turtle.goto(state.home.x + 2, state.home.y, state.home.z - 2);
     turtle.face(EAST);
     
     turtle.removeUnwanted(SAPLING);
