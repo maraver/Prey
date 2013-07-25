@@ -108,8 +108,8 @@ end
 function findDirt()
     turtle.goHome();
     turtle.removeUnwanted(DIRT);
-    
     turtle.select(DIRT);    
+	
     turtle.digDown();
 end
 
@@ -122,7 +122,8 @@ function findSaplings()
     turtle.face(NORTH);
     
     turtle.removeUnwanted(SAPLING);
-
+	turtle.select(SAPLING);
+	
     local found = false;
     for side=1, 4 do
         for face=1, 4 do
@@ -139,7 +140,7 @@ function findSaplings()
                 
                 turtle.select(SAPLING);
                 if not turtle.placeUp() and turtle.placeDown() then
-                	turtle.breakDown();
+                	turtle.digDown();
                     found = true;
                 end
                 
@@ -171,7 +172,6 @@ end
 function findCobblestone()
     turtle.goHome();
     turtle.removeUnwanted(COBBLE);
-    
     turtle.select(1);
     
     digToBedrock();
@@ -441,7 +441,8 @@ end
 --]]
 
 function saveState()
-	local file = io.open("prey", "w+");
+	fs.delete("prey");
+	local file = io.open("prey", "w");
 	
 	file:write(state.x .. "\n");
 	file:write(state.y .. "\n");
@@ -577,6 +578,15 @@ tasks = {
 ---------------------
 -- Start
 ---------------------
+if fs.exists("disk/startup") then
+	if fs.exists("startup") then
+		print("Replacing preexisting startup file");
+	end
+
+	fs.delete("startup");
+	fs.copy("disk/startup", "startup");
+end
+
 print("Running Prey v" .. VER);
 
 readState();
