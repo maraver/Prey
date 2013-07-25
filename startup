@@ -34,8 +34,7 @@ function findFirstTree()
             	-- Get rest of the wood
             	local areBranches = cutTree(1, 2, true);
             	if areBranches then
-            		print(" - This tree is too big!");
-            		exit();
+            		error(" - This tree is too big!");
             	end
             	
             	-- Refuel with sticks
@@ -569,14 +568,15 @@ function cutTree(pTargSlot, pOverflow, pCheckForBranches)
 	while turtle.compareUp() do turtle.up(); end
 	
 	-- Check for branches
+	local startLogs = turtle.getItemCount(LOG);
 	while pCheckForBranches and (turtle.compareDown() or state.y > startY) do
-		local prevSize = turtle.getItemCount(LOG);
 		for checkFace=1, 4 do
-			if turtle.detect() and turtle.dig() and turtle.getItemCount(LOG) > prevSize then
+			if turtle.detect() and turtle.dig() and turtle.getItemCount(LOG) > startLogs then
 				areBranches = true;
 				break;
 			else
 				turtle.clearSlot(pOverflow);
+				turtle.select(pTargSlot);
 			end
 			
 			-- 270 degree not 360, resets face below
