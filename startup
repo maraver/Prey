@@ -79,7 +79,7 @@ function findMoreTrees()
 					-- Check is an unknown tree, if is cut it down using it all as fuel
 					if (turtle.compareUp() or turtle.compareDown()) and turtle.refuel(true) then
 					    cutTree(2, 3);
-					elseif state.y < state.home.y + 3 and turtle.dig() and turtle.place() then
+					elseif state.y < state.home.y + 5 and turtle.dig() and turtle.place() then
 						turtle.up();
 						turtle.clearSlot(3);
 					end
@@ -121,14 +121,15 @@ end
 		collect sapplings from first tree
 --]]
 function findSaplings()
-    turtle.goto(state.home.x + NORTH, state.home.y, state.home.z);
-    turtle.face(NORTH);
+    turtle.goto(state.home.x + (NORTH * 2), state.home.y, state.home.z + (WEST * 2));
+    turtle.face(EAST);
     
     turtle.removeUnwanted(SAPLING);
 	turtle.select(SAPLING);
 	
     local found = false;
-    for side=1, 4 do
+    for i=1, 14 do -- can skip last 2
+		turtle.forward();
         for face=1, 4 do
             turtle.turnRight();
             
@@ -152,13 +153,10 @@ function findSaplings()
                 turtle.down();
             end
         end
-        turtle.turnRight();
-        turtle.forward();
-        
-        -- On all but first side go forward twice
-        if side ~= 1 then 
-            turtle.forward();
-        end
+       
+		if i % 4 == 0 then
+			turtle.turnRight();
+		end
         
         turtle.select(SAPLING);
         if not found then
@@ -166,6 +164,15 @@ function findSaplings()
         	turtle.transferTo(SAPLING + 2);
         end
     end
+
+	-- Check for last sapling at home
+	turtle.select(SAPLING)
+	turtle.goto(state.home.x, state.home.y + 1, state.home.z);
+	turtle.suckDown();
+	if not found then
+		-- Keep sapling slot clean without dropping
+		turtle.transferTo(SAPLING + 2);
+	end
 end
 
 --[[
