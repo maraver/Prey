@@ -521,6 +521,7 @@ function cutTree(pTargSlot, pOverflow, pIgnoreBranches)
 	
 	turtle.face(startFace);
 	turtle.clearSlot(pOverflow);
+	turtle.selectSlot(pTargSlot);
 	
 	return pGotEverything;
 end
