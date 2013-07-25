@@ -4,6 +4,7 @@
 VER = 0.5;
 NORTH, EAST, SOUTH, WEST = 0, 1, 2, 3;
 
+-- Change with caution
 LOG, DIRT, SAPLING, COBBLE, COAL = 1, 2, 3, 4, 5;
 
 ----------------------------------------------------------------------
@@ -68,23 +69,48 @@ function findMoreTrees()
 	for sideLng = 1, 10 do
 		for corners = 0, 1 do
 			for xz = 1, sideLng do
-				turtle.select(1);
-				turtle.forward();
+				turtle.select(LOG);
 				
-				if turtle.getItemCount(1) > oldCount or turtle.compareDown() or turtle.compareUp() then
-					cutTree(1, 2);
-        			oldCount = turtle.getItemCount(1);
-				elseif turtle.getItemCount(2) > 0 then                
-        			turtle.select(2);
-					-- Check is an unknown tree, if is cut it down using it all as fuel
-					if (turtle.compareUp() or turtle.compareDown()) and turtle.refuel(true) then
-					    cutTree(2, 3);
-					elseif state.y < state.home.y + 5 and turtle.dig() and turtle.place() then
-						turtle.up();
-						turtle.clearSlot(3);
-					end
+				if turtle.dig() then
+					turtle.forward();
 					
-        			turtle.clearSlot(2);
+					if turtle.getItemCount(1) > oldCount or turtle.compareDown() then
+						cutTree(1, 2);
+						oldCount = turtle.getItemCount(1);
+					elseif turtle.getItemCount(2) > 0 then                
+						turtle.select(2);
+						-- Check is an unknown tree, if is cut it down using it all as fuel
+						if (turtle.compareUp() or turtle.compareDown()) and turtle.refuel(true) then
+							cutTree(2, 3);
+						elseif state.y < state.home.y + 5 and turtle.dig() and turtle.place() then
+							turtle.up();
+						end
+						
+						turtle.clearSlot(2);
+					else
+						-- Dug with no result, leaves. Check for tree
+						local startFace = state.face;
+						
+						for i=1, 3 do
+							if turtle.detect() then
+								local oldX, oldZ = state.x, state.z;
+								turtle.forward();
+								
+								cutTree(1,2);
+								oldCount = turtle.getItemCount(1);
+								
+								turtle.goto(oldX, state.y, oldZ);
+								break;
+							else
+								turtle.turnRight();
+							end
+						end
+						
+						turtle.face(startFace);
+					end
+				else
+					-- Always go forward, just don't need to do any checks
+					turtle.forward();
 				end
 			end
 			turtle.turnRight();
@@ -92,9 +118,10 @@ function findMoreTrees()
 	end
 	
     turtle.goHome();
+	turtle.removeUnwanted(2);
     
 	-- Refuel with sticks
-    turtle.select(1); -- Save a log
+    turtle.select(LOG); -- Save a log
     turtle.digUp();
     turtle.placeUp();
 	turtle.craft();   -- Planks
