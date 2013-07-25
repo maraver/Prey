@@ -9,7 +9,6 @@ LOG, DIRT, SAPLING, COBBLE, COAL = 1, 2, 3, 4, 5;
 ----------------------------------------------------------------------
 -- Tasks
 ----------------------------------------------------------------------
-
 --[[
 	First Task:
 		find first adjacent tree
@@ -39,15 +38,13 @@ function findFirstTree()
             	end
             	
             	-- Refuel with sticks
-                turtle.placeDown(); -- Save wood
+                turtle.placeUp(); -- Save wood
             	turtle.craft();     -- Planks
             	turtle.transferTo(5, turtle.getItemCount(1) / 2);
             	turtle.craft();     -- Sticks
             	turtle.refuel(true, 64);
-            	turtle.digDown();   -- Recover wood
-            	
-            	-- Next job
-            	turtle.setJob(findMoreTrees);
+            	turtle.digUp();   -- Recover wood
+				
             	break;
             else
             	turtle.drop();
@@ -102,8 +99,6 @@ function findMoreTrees()
 	turtle.craft();   -- Sticks
 	turtle.refuel(true, 64);
     turtle.digUp();   -- Recover log
-    
-	turtle.setJob(findDirt);
 end
 
 --[[
@@ -116,8 +111,6 @@ function findDirt()
     
     turtle.select(DIRT);    
     turtle.digDown();
-    
-    turtle.setJob(findSaplings);
 end
 
 --[[
@@ -166,11 +159,9 @@ function findSaplings()
         turtle.select(SAPLING);
         if not found then
         	-- Keep sapling slot clean without dropping
-        	turtle.transfterTo(SAPLING + 2);
+        	turtle.transferTo(SAPLING + 2);
         end
     end
-    
-    turtle.setJob(findCobblestone);
 end
 
 --[[
@@ -213,8 +204,6 @@ function findCobblestone()
         turtle.freeSlot(4, 16);
         turtle.freeSlot(highSlot, 4);
     end
-    
-    turtle.setJob(findCoal);
 end
 
 --[[
@@ -244,8 +233,6 @@ function findCoal()
     -- Refuel with all but 1 coal
     turtle.select(5);
     turtle.refuel(true, turtle.getItemCount(5) - 1);
-
-    turtle.setJob(buildBase);
 end
 
 --[[
@@ -259,10 +246,6 @@ function buildBase()
     
     turtle.select(4);
     turtle.face(NORTH);
-    
-    
-
-    turtle.setJob(findIron);
 end
 
 --[[
@@ -275,8 +258,6 @@ function findIron()
     
     -- Ore commong from (30-40)
     turtle.goto(state.x, 35, state.z);
-    
-    turtle.setJob(nil);
 end
 
 --[[
@@ -451,13 +432,6 @@ turtle.removeUnwanted = function(pStartIdx)
 	end
 end
 
-turtle.setJob = function(pJob)
-	assert(pJob == nil or type(pJob) == "function");
-	
-	state.prevJob = state.job;
-	state.job = pJob;
-end
-
 ----------------------------------------------------------------------
 -- Util
 ----------------------------------------------------------------------
@@ -465,6 +439,49 @@ end
 --[[
     Common Functions
 --]]
+
+function saveState()
+	local file = io.open("prey", "w+");
+	
+	file:write(state.x .. "\n");
+	file:write(state.y .. "\n");
+	file:write(state.z .. "\n");
+	file:write(state.face .. "\n");
+	file:write(state.home.x .. "\n");
+	file:write(state.home.y .. "\n");
+	file:write(state.home.z .. "\n");
+	file:write(state.home.face .. "\n");
+	file:write(state.task .. "\n");
+	
+	file:close();
+end
+
+function readState()
+	if not fs.exists("prey") then return; end
+
+	local file = io.open("prey");
+
+	local i = 0;
+	for line in file:lines() do
+		line = tonumber(line);
+		
+		if i == 0 then state.x = line;
+		elseif i == 1 then state.y = line;
+		elseif i == 2 then state.z = line;
+		elseif i == 3 then state.face = line;
+		elseif i == 4 then state.home.x = line;
+		elseif i == 5 then state.home.y = line;
+		elseif i == 6 then state.home.z = line;
+		elseif i == 7 then state.home.face = line;
+		elseif i == 8 then state.task = line;
+		else error("Prey state file overflow!");
+		end
+		
+		i = i + 1;
+	end
+	
+	file:close();
+end
 
 function digToBedrock()
     while not turtle.detectDown() or turtle.digDown() do
@@ -502,7 +519,7 @@ function cutTree(pTargSlot, pOverflow, pIgnoreBranches)
 	end
 	
 	local pGotEverything = true;
-	while state.y > startY or turtle.compareDown() do
+	while turtle.compareDown() do
 		-- Confirm there are no other logs
 		if pGotEverything and not pIgnoreBranches then
 			for i=1, 4 do
@@ -519,9 +536,11 @@ function cutTree(pTargSlot, pOverflow, pIgnoreBranches)
 		turtle.down(); 
 	end
 	
+	turtle.goto(state.x, startY, state.z);
+	
 	turtle.face(startFace);
 	turtle.clearSlot(pOverflow);
-	turtle.selectSlot(pTargSlot);
+	turtle.select(pTargSlot);
 	
 	return pGotEverything;
 end
@@ -536,8 +555,7 @@ end
 	State machine
 --]]
 state = {
-	job = findFirstTree,
-	prevJob = nil,
+	task = 1,
 	
 	x = 0,
 	y = 0,
@@ -552,14 +570,22 @@ state = {
 	}
 };
 
+tasks = {
+	findFirstTree, findMoreTrees, findDirt, findSaplings, findCobblestone, findCoal, buildBase, findIron
+};
+
 ---------------------
 -- Start
 ---------------------
 print("Running Prey v" .. VER);
 
-while state.job ~= nil do
-	print("* New Job " .. tostring(state.job));
-	state.job();
+readState();
+while state.task ~= -1 and state.task <= table.getn(tasks) do
+	print("* New task " .. tostring(state.task) .. "/" .. table.getn(tasks));
+	(tasks[state.task])();
+	
+	state.task = state.task + 1;
+	saveState();
 end
 
 print("Done");
