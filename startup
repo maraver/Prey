@@ -166,7 +166,7 @@ function findSaplings()
             turtle.turnRight();
             
             -- If picked up something and hasn't found sapling
-            if turtle.suck() and not found then 
+            if (turtle.suck() or turtle.suckDown()) and not found then 
                 -- Make check area
                 turtle.up();
                 turtle.select(DIRT);
