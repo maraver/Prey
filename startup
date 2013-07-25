@@ -32,8 +32,8 @@ function findFirstTree()
             	turtle.up();
             	
             	-- Get rest of the wood
-            	local gotEverything = cutTree(1, 2, false);
-            	if not gotEverything then
+            	local areBranches = cutTree(1, 2, true);
+            	if areBranches then
             		print(" - This tree is too big!");
             		exit();
             	end
@@ -256,16 +256,18 @@ function findCoal()
     -- Clear a space for placing
     turtle.digUp();
     
-    for i=5, 16 do
-        turtle.select(i);
+    for slot=5, 16 do
+        turtle.select(slot);
         
         -- If can be placed not coal
         if turtle.placeUp() then
             turtle.digUp();
         -- If can't be placed and can refuel is coal
         elseif turtle.refuel(true) then
-            if i ~= 5 then
+            if slot ~= 5 then
             	turtle.freeSlot(5, 12);
+				
+				turtle.select(slot);
             	turtle.transferTo(5);
             end
             break;
@@ -543,59 +545,70 @@ function digToBedrock()
 end
 
 -- Cut down a tree and remove excess in overflow slot
--- Return true if got everything
-function cutTree(pTargSlot, pOverflow, pIgnoreBranches)
+-- Return true asked to check for branches and found them
+function cutTree(pTargSlot, pOverflow, pCheckForBranches)
 	-- Type check
 	assert(type(pOverflow) == "number" and type(pTargSlot) == "number", "Slots must be numbers");
-	if type(pIgnoreBranches) ~= "boolean" then pIgnoreBranches = true; end
-
+	
 	print(" - Cut tree at (" .. state.x .. "," .. state.z .. ")");
 
-	local startY, startFace = state.y, state.face;
+	local startY, startFace, areBranches = state.y, state.face, false;
 	
 	turtle.select(pTargSlot);
 	
 	-- Handle doesn't have log
-	if turtle.detectUp() then
-		if turtle.getItemCount(pTargSlot) <= 0  then
-			turtle.up();
+	if turtle.getItemCount(pTargSlot) <= 0 then
+		if turtle.detectUp() then 
+			turtle.up(); 
+		else
+			return false;
 		end
-		
-		while turtle.compareUp() do turtle.up(); end
-		
-		turtle.goto(state.x, startY, state.z);
 	end
 	
-	-- Handle doesn't have log and none were above
-	if turtle.detectDown() and turtle.getItemCount(pTargSlot) <= 0 then
-		turtle.down();
-	end
+	-- Get tree
+	while turtle.compareUp() do turtle.up(); end
 	
-	local pGotEverything = true;
-	while turtle.compareDown() do
-		-- Confirm there are no other logs
-		if pGotEverything and not pIgnoreBranches then
-			for i=1, 4 do
-				if turtle.compare() then
-					pGotEverything = false;
-					break;
-				end
-				
-				-- 270 degree not 360, resets face below
-				if 1 ~= 4 then turtle.turnRight(); end
+	-- Check for branches
+	while pCheckForBranches and (turtle.compareDown() or state.y > startY) do
+		local prevSize = turtle.getItemCount(LOG);
+		for checkFace=1, 4 do
+			if turtle.detect() and turtle.dig() and turtle.getItemCount(LOG) > prevSize then
+				areBranches = true;
+				break;
+			else
+				turtle.clearSlot(pOverflow);
 			end
+			
+			-- 270 degree not 360, resets face below
+			if checkFace ~= 4 then turtle.turnRight(); end
 		end
 	
 		turtle.down(); 
 	end
 	
+	-- Go down to start position
+	while state.y > startY do turtle.down(); end
+	
+	-- Handle still doesn't have logs
+	if turtle.getItemCount(pTargSlot) <= 0 then
+		if turtle.detectDown() then
+			turtle.down();
+		else
+			return false;
+		end
+	end
+	
+	-- Get logs below start
+	while turtle.compareDown() do turtle.down(); end
+	
+	-- Reset
 	turtle.goto(state.x, startY, state.z);
 	
 	turtle.face(startFace);
 	turtle.clearSlot(pOverflow);
 	turtle.select(pTargSlot);
 	
-	return pGotEverything;
+	return areBranches;
 end
 
 function setHomeToHere()
