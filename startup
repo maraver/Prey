@@ -552,6 +552,23 @@ function setHomeToHere()
     state.home.z = state.z;
 end
 
+function copyStartup()
+	if fs.exists("disk/startup") then
+		if fs.exists("startup") then
+			print("Replace startup file? (y/n)");
+			local _, input = os.pullEvent("key");
+			if tostring(input) ~= "y" and tostring(input) ~= "Y" then
+				print("Canceled");
+				return;
+			end
+			
+			fs.delete("startup");
+		end
+
+		fs.copy("disk/startup", "startup");
+	end
+end
+
 --[[
 	State machine
 --]]
@@ -578,17 +595,10 @@ tasks = {
 ---------------------
 -- Start
 ---------------------
-if fs.exists("disk/startup") then
-	if fs.exists("startup") then
-		print("Replacing preexisting startup file");
-	end
-
-	fs.delete("startup");
-	fs.copy("disk/startup", "startup");
-end
 
 print("Running Prey v" .. VER);
 
+copyStartup();
 readState();
 while state.task ~= -1 and state.task <= table.getn(tasks) do
 	print("* New task " .. tostring(state.task) .. "/" .. table.getn(tasks));
