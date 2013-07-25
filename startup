@@ -71,7 +71,7 @@ function findMoreTrees()
 				turtle.select(1);
 				turtle.forward();
 				
-				if turtle.getItemCount(1) > oldCount then
+				if turtle.getItemCount(1) > oldCount or turtle.compareDown() or turtle.compareUp() then
 					cutTree(1, 2);
         			oldCount = turtle.getItemCount(1);
 				elseif turtle.getItemCount(2) > 0 then                
