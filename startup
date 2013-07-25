@@ -92,6 +92,10 @@ function findMoreTrees()
 						local startFace = state.face;
 						
 						for i=1, 3 do
+							-- If in middle of a side don't need to check directly infront
+							-- Will get that next step
+							if xz ~= sideLng then turtle.turnRight(); end
+						
 							if turtle.compare() then
 								local oldX, oldZ = state.x, state.z;
 								turtle.forward();
@@ -472,7 +476,7 @@ end
 turtle.removeUnwanted = function(pStartIdx)
 	assert(type(pStartIdx) == "number" and pStartIdx >= 1 and pStartIdx <= 16);
 
-	print("- Removing from " .. pStartIdx .. " onward");
+	print(" - Removing from " .. pStartIdx .. " onward");
 	for i = pStartIdx, 16 do
 		turtle.select(i);
 		turtle.refuel(true, 64);
