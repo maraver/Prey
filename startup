@@ -92,7 +92,7 @@ function findMoreTrees()
 						local startFace = state.face;
 						
 						for i=1, 3 do
-							if turtle.detect() then
+							if turtle.compare() then
 								local oldX, oldZ = state.x, state.z;
 								turtle.forward();
 								
@@ -213,7 +213,7 @@ function findCobblestone()
     turtle.select(1);
     
     digToBedrock();
-    turtle.goto(state.x, state.y + 9, state.z);
+    turtle.goto(state.x, state.y + 6, state.z);
     
     -- Hit bottom, save height
     state.home.y = -state.y;
@@ -470,8 +470,9 @@ end
 
 -- Remove any unwanted items from slot pStartIdx onward
 turtle.removeUnwanted = function(pStartIdx)
-	assert(type(pStartIdx) == "number" and pStartIdx >= 1 and pStartIdx <= 16, "Invalid start idx " .. pStartIdx);
+	assert(type(pStartIdx) == "number" and pStartIdx >= 1 and pStartIdx <= 16);
 
+	print("- Removing from " .. pStartIdx .. " onward");
 	for i = pStartIdx, 16 do
 		turtle.select(i);
 		turtle.refuel(true, 64);
@@ -544,7 +545,7 @@ function cutTree(pTargSlot, pOverflow, pIgnoreBranches)
 	assert(type(pOverflow) == "number" and type(pTargSlot) == "number", "Slots must be numbers");
 	if type(pIgnoreBranches) ~= "boolean" then pIgnoreBranches = true; end
 
-    	print(" - Cut tree at (" .. state.x .. "," .. state.z .. ")");
+	print(" - Cut tree at (" .. state.x .. "," .. state.z .. ")");
 
 	local startY, startFace = state.y, state.face;
 	
