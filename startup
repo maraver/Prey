@@ -79,6 +79,9 @@ function findMoreTrees()
 					-- Check is an unknown tree, if is cut it down using it all as fuel
 					if (turtle.compareUp() or turtle.compareDown()) and turtle.refuel(true) then
 					    cutTree(2, 3);
+					elseif state.y < state.home.y + 3 and turtle.dig() and turtle.place() then
+						turtle.up();
+						turtle.clearSlot(3);
 					end
 					
         			turtle.clearSlot(2);
