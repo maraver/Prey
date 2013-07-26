@@ -50,9 +50,9 @@ function findFirstTree()
             else
             	turtle.drop();
             end
-		else
-			turtle.turnLeft();
 		end
+		
+		turtle.turnLeft();
 	end
 	
 	error("I couldn't find a tree!");
@@ -78,7 +78,7 @@ function findMoreTrees()
 					
 					if turtle.getItemCount(1) > oldCount or turtle.compareDown() or turtle.compareUp() then
 						-- If close check for branches
-						local areBranches = cutTree(1, 2, sideLng < 3);
+						local areBranches = cutTree(1, 2, sideLng <= 4);
 						if areBranches then error("This tree is too big!"); end
 						
 						oldCount = turtle.getItemCount(1);
@@ -155,21 +155,22 @@ end
 	Fourth Task:
 		collect sapplings from first tree
 --]]
-function findSaplings()
+function findSaplings(found)
+	if found == nil then found = false; end
+	assert(type(found) == "boolean");
+
 	-- Go 2 north and 2 west
-    turtle.goto(state.home.x + 2, state.home.y, state.home.z - 2);
+    turtle.goto(state.x + 2, state.y, state.z - 2);
     turtle.face(EAST);
     
-    turtle.removeUnwanted(SAPLING);
+    if not found then turtle.removeUnwanted(SAPLING); end
 	turtle.select(SAPLING);
 	
 	-- Give saplings some more time
-	print("Waiting 30 seconds for saplings...");
-	os.sleep(30);
+	print(" - Waiting 10 seconds for saplings...");
+	os.sleep(10);
 	turtle.suckUp();
-
 	
-    local found = false;
     for i=1, 14 do -- can skip last 2
 		turtle.forward();
         for face=1, 4 do
@@ -210,11 +211,6 @@ function findSaplings()
 			end
         end
     end
-
-	-- Check for last sapling at home
-	turtle.select(SAPLING)
-	turtle.goHome();
-	turtle.suckDown();
 end
 
 --[[
@@ -223,6 +219,11 @@ end
 --]]
 function findCobblestone()
     turtle.goHome();
+	
+	-- Check for sapling
+	turtle.select(SAPLING);
+	turtle.suckDown();
+	
     turtle.removeUnwanted(COBBLE);
     turtle.select(1);
     
@@ -262,23 +263,25 @@ end
     Fifth Task:
         using items from find cobblestone determine which is coal
 --]]
-function findCoal()    
+function checkForCoal()    
     -- Clear a space for placing
-    turtle.digUp();
+    if turtle.detectUp() then 
+		turtle.digUp();
+	end
     
-    for slot=5, 16 do
+    for slot=COAL, 16 do
         turtle.select(slot);
         
         -- If can be placed not coal
         if turtle.placeUp() then
             turtle.digUp();
-        -- If can't be placed and can refuel is coal
-        elseif turtle.refuel(true) then
-            if slot ~= 5 then
-            	turtle.freeSlot(5, 12);
+        -- If can't be placed and can refuel is coal, make sure don't lose (check count)
+        elseif turtle.getItemCount(slot) > 1 and turtle.refuel(true) then
+            if slot ~= COAL then
+            	turtle.freeSlot(COAL, 12);
 				
 				turtle.select(slot);
-            	turtle.transferTo(5);
+            	turtle.transferTo(COAL);
             end
             break;
         end
@@ -293,13 +296,84 @@ end
     Task:
         build a base
 --]]
-function buildBase()
+function buildBaseA()
     -- Finalize home
-    state.home.y = state.home.y + 11;
-    turtle.goto(state.home.x, state.home.y - 1, state.home.z);
-    
-    turtle.select(4);
-    turtle.face(NORTH);
+	state.home.face = NORTH;
+    state.home.y = state.home.y + 10;
+	turtle.goHome();
+	
+	turtle.select(COBBLE);
+	turtle.forward();
+	for x=1,5 do
+		for z=1,5 do
+			if turtle.detectDown() then turtle.digDown(); end
+			
+			if x == 3 and z == 3 then
+				turtle.select(DIRT);
+				turtle.placeDown();
+			
+				-- Limiting top block
+				turtle.select(COBBLE);
+				for y=1, 6 do turtle.up(); end
+				turtle.placeUp();
+				for y=1, 6 do turtle.down(); end
+			else 
+				turtle.placeDown();
+			end
+			
+			if z < 5 then turtle.forward(); end
+		end
+		
+		if x % 2 == 0 then
+			turtle.turnRight();
+			turtle.forward();
+			turtle.turnRight();
+		else
+			turtle.turnLeft();
+			turtle.forward();
+			turtle.turnLeft();
+		end
+	end
+end
+
+--[[
+	Task:
+		Grow a tree
+--]]
+function plantTree()
+	turtle.goto(state.home.x + 3, state.home.y, state.home.z - 1);
+	turtle.face(WEST);
+	
+	turtle.select(SAPLING);
+	turtle.place();
+end
+
+function farmTree()
+	turtle.goto(state.home.x + 3, state.home.y, state.home.z - 1);
+	turtle.face(WEST);
+	turtle.select(LOG);
+
+	print(" - Waiting for tree to grow");
+	
+	-- Wait for the tree to grow
+	while not turtle.compare() do
+		os.sleep(1);
+	end
+	
+	turtle.forward();
+	cutTree(1);
+	
+	turtle.select(LOG);
+	turtle.refuel(true, turtle.getItemCount(LOG) - 1);
+	
+	print(" - Waiting 50 seconds for saplings...");
+	os.sleep(50);
+	turtle.suckUp();
+	
+	findSaplings(true);
+	
+	-- Reset sapling for farming
+	plantTree();
 end
 
 --[[
@@ -523,7 +597,7 @@ end
 -- Return true asked to check for branches and found them
 function cutTree(pTargSlot, pOverflow, pCheckForBranches)
 	-- Type check
-	assert(type(pOverflow) == "number" and type(pTargSlot) == "number", "Slots must be numbers");
+	assert(type(pTargSlot) == "number" and (type(pOverflow) == "number" or not pCheckForBranches), "Slots must be numbers");
 	
 	print(" - Cut tree at (" .. state.x .. "," .. state.z .. ")");
 
@@ -580,8 +654,9 @@ function cutTree(pTargSlot, pOverflow, pCheckForBranches)
 	-- Reset
 	turtle.goto(state.x, startY, state.z);
 	
+	if pCheckForBranches then turtle.clearSlot(pOverflow); end
+	
 	turtle.face(startFace);
-	turtle.clearSlot(pOverflow);
 	turtle.select(pTargSlot);
 	
 	return areBranches;
@@ -601,7 +676,7 @@ print = function(var)
 	term.setCursorPos(1, 1);
 	term.clearLine();	
 	write("Prey v" .. VER .. "   Task: " .. state.task .. "   Fuel: " .. turtle.getFuelLevel() .. "\n");
-	write("-----------------------------------------------\n");
+	for i=1, term.getSize() do write("-"); end
 	term.setCursorPos(x, y);
 end
 
@@ -688,7 +763,7 @@ state = {
 };
 
 tasks = {
-	findFirstTree, findMoreTrees, findDirt, findSaplings, findCobblestone, findCoal, buildBase, findIron
+	findFirstTree, findMoreTrees, findDirt, findSaplings, findCobblestone, checkForCoal, buildBaseA, plantTree, farmTree, findIron
 };
 
 ---------------------
