@@ -248,7 +248,7 @@ function findCobblestone()
     turtle.select(1);
     
     digToBedrock();
-    turtle.goto(state.x, state.y + 6, state.z);
+    turtle.goto(state.x, state.y + 5, state.z);
     
     -- Hit bottom, save height
     state.home.y = -state.y;
@@ -308,9 +308,15 @@ function checkForCoal()
         end
     end
     
-    -- Refuel with all but 1 coal
-    turtle.select(5);
-    turtle.refuel(true, turtle.getItemCount(5) - 1);
+	-- Remove extra because we went below 32 may have gotten goal
+	if hasFound(COAL) then
+		turtle.select(COAL);
+		turtle.refuel(true, turtle.getItemCount(5) - 1);
+		
+		turtle.removeUnwanted(COAL + 1);
+	else
+		turtle.removeUnwanted(COAL);
+	end
 end
 
 --[[
