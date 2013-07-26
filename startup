@@ -152,66 +152,45 @@ end
 	Fourth Task:
 		collect sapplings from first tree
 --]]
-function findSaplings(found)
-	if found == nil then found = false; end
-	assert(type(found) == "boolean");
+function findSaplings(pRadius)
+	if pRadius == nil then pRadius = 3 end
+	assert(type(pRadius) == "number");
+	assert(pRadius > 0 and pRadius <= 3);
 
-	-- Go 2 north and 2 west
-    turtle.goto(state.x + 2, state.y, state.z - 2);
-    turtle.face(EAST);
+	if not hasFound(SAPLING) then
+		-- Go north and west
+		turtle.goto(state.x + pRadius, state.y, state.z - pRadius);
+		turtle.face(EAST);
+		
+		turtle.removeUnwanted(SAPLING);
+	end
     
-    if not found then turtle.removeUnwanted(SAPLING); end
 	turtle.select(SAPLING);
 	
 	-- Give saplings some more time
-	print(" - Waiting 10 seconds for saplings...");
-	os.sleep(10);
+	print(" - Waiting 30 seconds for saplings...");
+	os.sleep(30);
 	turtle.suckUp();
 	
-    for i=1, 14 do -- can skip last 2
-		turtle.forward();
-        for face=1, 4 do
-            turtle.turnRight();
-			
-			if turtle.detect() then 
-				turtle.dig(); 
-				if not found then
-					turtle.freeSlot(SAPLING, SAPLING + 2);
-				end
-			end
-            
-            -- If picked up something and hasn't found sapling
-            if (turtle.suck() or turtle.suckDown()) and not found then 
-                -- Make check area
-                turtle.up();
-                turtle.select(DIRT);
-                turtle.placeDown();
-                turtle.up();
-                if turtle.detectUp() then turtle.digUp(); end
-                
-                turtle.select(SAPLING);
-                if not turtle.placeUp() and turtle.placeDown() then
-                	turtle.digDown();
-					
-                    found = true;
-					setFound(SAPLING);
-                end
-                
-                turtle.down();
-                turtle.select(DIRT);
-                turtle.down();
-            end
-        end
+    for i=1, (pRadius*2)*4 - 2 do -- can skip last 2
+		doSaplingCheck();
        
-		if i % 4 == 0 then
+		turtle.forward();
+	   
+		if i % (pRadius*2) == 0 then
 			turtle.turnRight();
 		end
         
         turtle.select(SAPLING);
-        if not found then
+        if not hasFound(SAPLING) then
 			turtle.freeSlot(SAPLING, SAPLING + 2);
         end
     end
+	
+	if pRadius > 2 then
+		turtle.goto(state.x - pRadius, state.y, state.z + pRadius);
+		doSaplingCheck();
+	end
 end
 
 --[[
@@ -313,7 +292,7 @@ function buildBaseA()
 		for z=1,5 do
 			if turtle.detectDown() then turtle.digDown(); end
 			
-			if x == 3 and z == 3 then
+			if (x == 1 or x == 5) and (z == 1 or z == 5) then
 				turtle.select(DIRT);
 				turtle.placeDown();
 			
@@ -329,15 +308,14 @@ function buildBaseA()
 			if z < 5 then turtle.forward(); end
 		end
 		
-		if x % 2 == 0 then
-			turtle.turnRight();
-			turtle.forward();
-			turtle.turnRight();
-		else
-			turtle.turnLeft();
-			turtle.forward();
-			turtle.turnLeft();
+		-- Turn for next row
+		local turnFunc = turtle.turnRight;
+		if x % 2 ~= 0 then
+			turnFunc = turtle.turnLeft;
 		end
+		turnFunc();
+		turtle.forward();
+		turnFunc();
 	end
 end
 
@@ -345,45 +323,71 @@ end
 	Task:
 		Grow a tree
 --]]
-function plantTree()
-	turtle.goto(state.home.x + 3, state.home.y, state.home.z - 3);
-	turtle.face(EAST);
-	
+function plantTrees()
+	turtle.goto(state.home.x, state.home.y, state.home.z);
+	turtle.face(NORTH);
 	turtle.select(SAPLING);
+	
+	-- (1,1) Sapling
+	turtle.forward();
+	turtle.forward();
+	turtle.face(SOUTH);
+	turtle.place();
+	
+	-- (1,5) Sapling
+	turtle.face(NORTH);
+	turtle.forward();
+	turtle.forward();
+	turtle.place();
+	
+	-- (5, 5) Sapling
+	turtle.face(EAST);
+	for i=1,4 do turtle.forward(); end
+	turtle.face(NORTH);
+	turtle.place();
+	
+	-- (5, 1) Sapling
+	turtle.face(SOUTH);
+	turtle.forward();
+	turtle.forward();
 	turtle.place();
 end
 
-function farmTree()
-	turtle.goto(state.home.x + 3, state.home.y, state.home.z - 3);
-	turtle.face(EAST);
+function farmTrees()
+	turtle.goHome();
+	turtle.face(NORTH);
 	turtle.select(LOG);
 
-	print(" - Waiting for tree to grow");
+	-- Tree (1,1)
+	waitThenCutTree();
 	
-	-- Wait for the tree to grow
-	while not turtle.compare() do
-		os.sleep(1);
-	end
+	-- Tree (1,5)
+	for i=1,3 do turtle.forward(); end
+	turtle.goto(state.x + 3, state.y, state.z);
+	waitThenCutTree();
 	
-	turtle.forward();
-	cutTree(1);
+	-- Tree (5,5)
+	turtle.face(EAST);
+	for i=1,3 do turtle.forward(); end
+	waitThenCutTree();
 	
-	turtle.select(LOG);
-	turtle.refuel(true, turtle.getItemCount(LOG) - 1);
+	-- Tree (5, 1)
+	turtle.face(SOUTH);
+	for i=1,3 do turtle.forward(); end
+	waitThenCutTree();
 	
-	print(" - Waiting 110 seconds for saplings...");
-	os.sleep(110);
-	turtle.suckUp();
+	-- setup for findSaplings
+	turtle.goHome();
+	turtle.face(NORTH);
 	
-	for i=1,3 do
-		turtle.suck();
-		turtle.turnRight();
-	end
+	-- Wait
+	print(" - Waiting 2 minutes for saplings...");
+	os.sleep(120);
 	
-	findSaplings(true);
+	findSaplings(2);
 	
 	-- Reset sapling for farming
-	plantTree();
+	plantTrees();
 end
 
 --[[
@@ -584,15 +588,18 @@ turtle.face = function(pFace)
 	end
 end
 
-turtle.goto = function(pX, pY, pZ)
+turtle.goto = function(pX, pY, pZ, pFace)
 	assert(type(pX) == "number" and type(pY) == "number" and type(pZ) == "number", "Goto location must be given as 3 numbers");
 	
 	-- Avoid breaking home
-	if (state.y >= state.home.y or (state.y < state.home.y and pY >= state.home.y))
-			and (pX ~= state.home.x or pY ~= state.home.y or pZ ~= state.home.z) then
-		turtle.goHome();
-	elseif state.y == state.home.y - 1 then
+	if state.y == state.home.y - 1 then
 		turtle.down();
+	elseif state.y == state.home.y then
+		turtle.up();
+	end
+	
+	if ((state.y > state.home.y and pY < state.home.y) or (state.y < state.home.y and pY > state.home.y)) then
+		turtle.goHome();
 	end
 	
 	-- Correct x position
@@ -615,11 +622,14 @@ turtle.goto = function(pX, pY, pZ)
 	-- Correct y position
 	while state.y > pY do turtle.down(); end
 	while state.y < pY do turtle.up(); end
+	
+	if type(pFace) == "number" then
+		turtle.face(pFace);
+	end
 end
 
 turtle.goHome = function()
-	turtle.goto(state.home.x, state.home.y, state.home.z);
-	turtle.face(state.home.face);
+	turtle.goto(state.home.x, state.home.y, state.home.z, state.home.face);
 end
 
 turtle.clearSlot = function(pSlot)
@@ -662,6 +672,43 @@ end
 ----------------------------------------------------------------------
 
 --[[
+	Checks
+--]]
+function doSaplingCheck()
+	for face=1, 4 do			
+		if turtle.detect() then 
+			turtle.dig(); 
+			if not hasFound(SAPLING) then
+				turtle.freeSlot(SAPLING, SAPLING + 2);
+			end
+		end
+		
+		-- If picked up something and hasn't found sapling
+		if (turtle.suck() or turtle.suckDown()) and not hasFound(SAPLING) then 
+			-- Make check area
+			turtle.up();
+			turtle.select(DIRT);
+			turtle.placeDown();
+			turtle.up();
+			if turtle.detectUp() then turtle.digUp(); end
+			
+			turtle.select(SAPLING);
+			if not turtle.placeUp() and turtle.placeDown() then
+				turtle.digDown();
+				
+				setFound(SAPLING);
+			end
+			
+			turtle.down();
+			turtle.select(DIRT);
+			turtle.down();
+		end
+		
+		turtle.turnRight();
+	end
+end
+
+--[[
     Common Functions
 --]]
 
@@ -693,6 +740,18 @@ function refuelWithSticks()
 	turtle.refuel(true, 64);
     turtle.digUp();   -- Recover log
 end
+
+function waitThenCutTree()
+	if turtle.detect() then
+		print(" - Waiting for tree to grow");
+		while not turtle.compare() do os.sleep(1); end
+		turtle.forward();
+		cutTree(1);
+		turtle.refuel(true, turtle.getItemCount(LOG) - 1);
+	else
+		print(" - No tree or sapling found");
+	end
+end	
 
 -- Cut down a tree and remove excess in overflow slot
 -- Return true asked to check for branches and found them
@@ -886,7 +945,7 @@ state = {
 foundItems = { };
 
 tasks = {
-	findFirstTree, findMoreTrees, findDirt, findSaplings, findCobblestone, checkForCoal, buildBaseA, plantTree, farmTree, findIron, farmTree
+	findFirstTree, findMoreTrees, findDirt, findSaplings, findCobblestone, checkForCoal, buildBaseA, plantTrees, farmTrees, findIron, farmTrees
 };
 
 ---------------------
