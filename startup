@@ -1,7 +1,7 @@
 --[[
     Vars
 --]]
-VER = 0.6;
+VER = 0.7;
 NORTH, EAST, SOUTH, WEST = 0, 1, 2, 3;
 
 -- Change with caution
