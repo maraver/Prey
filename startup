@@ -81,6 +81,7 @@ function findMoreTrees()
 						local areBranches = cutTree(1, 2, sideLng <= 4);
 						if areBranches then error("This tree is too big!"); end
 						
+						refuelWithSticks();
 						oldCount = turtle.getItemCount(1);
 					elseif turtle.getItemCount(2) > 0 then                
 						turtle.select(2);
@@ -105,6 +106,7 @@ function findMoreTrees()
 								turtle.forward();
 								
 								cutTree(1, 2);
+								refuelWithSticks();
 								oldCount = turtle.getItemCount(1);
 								
 								turtle.goto(oldX, state.y, oldZ);
@@ -128,15 +130,7 @@ function findMoreTrees()
     turtle.goHome();
 	turtle.removeUnwanted(2);
     
-	-- Refuel with sticks
-    turtle.select(LOG); -- Save a log
-    turtle.digUp();
-    turtle.placeUp();
-	turtle.craft();   -- Planks
-	turtle.transferTo(5, turtle.getItemCount(1) / 2);
-	turtle.craft();   -- Sticks
-	turtle.refuel(true, 64);
-    turtle.digUp();   -- Recover log
+	refuelWithSticks();
 end
 
 --[[
@@ -175,6 +169,13 @@ function findSaplings(found)
 		turtle.forward();
         for face=1, 4 do
             turtle.turnRight();
+			
+			if turtle.detect() then 
+				turtle.dig(); 
+				if not found then
+					freeSlot(SAPLING, SAPLING + 2);
+				end
+			end
             
             -- If picked up something and hasn't found sapling
             if (turtle.suck() or turtle.suckDown()) and not found then 
@@ -203,12 +204,7 @@ function findSaplings(found)
         
         turtle.select(SAPLING);
         if not found then
-        	-- Clear sapling slot out of the way
-        	if not turtle.transferTo(SAPLING + 2) then
-				turtle.turnLeft();
-				turtle.drop();
-				turtle.turnRight();
-			end
+			freeSlot(SAPLING, SAPLING + 2);
         end
     end
 end
@@ -500,7 +496,11 @@ end
 --]]
 turtle.freeSlot = function(pToFreeSlot, pToStoreSlot)
     turtle.select(pToFreeSlot);
-    turtle.transferTo(pToStoreSlot);
+	if not turtle.transferTo(pToStoreSlot) then
+		turtle.turnLeft();
+		turtle.drop();
+		turtle.turnRight();
+	end
 end
 
 turtle.face = function(pFace)
@@ -591,6 +591,18 @@ function digToBedrock()
     while not turtle.detectDown() or turtle.digDown() do
         turtle.down();
     end
+end
+
+-- Only works if just has logs
+function refuelWithSticks()
+    turtle.select(LOG); -- Save a log
+    turtle.digUp();
+    turtle.placeUp();
+	turtle.craft();   -- Planks
+	turtle.transferTo(5, turtle.getItemCount(1) / 2);
+	turtle.craft();   -- Sticks
+	turtle.refuel(true, 64);
+    turtle.digUp();   -- Recover log
 end
 
 -- Cut down a tree and remove excess in overflow slot
