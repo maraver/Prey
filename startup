@@ -98,9 +98,10 @@ function findMoreTrees()
 						if (turtle.compareUp() or turtle.compareDown()) and turtle.refuel(true) then
 							cutTree(3, 3+1);
 						elseif doSaplingCheck() then
-							local oldFace = state.face();
+							local oldFace = state.face;
 							turtle.faceBlock(0, 0);
 							if turtle.detect() then turtle.dig(); end
+							turtle.select(SAPLING);
 							turtle.drop();
 							turtle.face(oldFace);
 						elseif state.y <= state.home.y + MAX_AVOID and turtle.dig() and turtle.place() then
@@ -369,7 +370,7 @@ function plantTrees()
 	turtle.place();
 	
 	-- (5, 5) Sapling
-	turtle.face(EAST);
+	turtle.face(WEST);
 	for i=1,4 do turtle.forward(); end
 	turtle.face(NORTH);
 	turtle.place();
@@ -395,7 +396,7 @@ function farmTrees()
 	waitThenCutTree();
 	
 	-- Tree (5,5)
-	turtle.face(EAST);
+	turtle.face(WEST);
 	for i=1,3 do turtle.forward(); end
 	waitThenCutTree();
 	
@@ -722,7 +723,7 @@ end
 
 -- RETURNS true if found saplings on this check
 function doSaplingCheck()
-	if hasFound(SAPLING) and turte.getItemCount(SAPLING) > 0 then
+	if hasFound(SAPLING) then
 		return false; -- Already found
 	end
 
@@ -892,25 +893,21 @@ end
 function hasFound(id)
 	assert(type(id) == "number");
 	
-	return foundItems[id] == true;
+	return foundItems[id] == true and turtle.getItemCount(id) > 0;
 end
 
 function setFound(id)
 	assert(type(id) == "number");
 	
-	if not hasFound(id) then
-		print(" - Found item #" .. id);
-	else
-		print(" - Rediscovered item #" .. id);
-	end
+	print(" - Found item #" .. id);
 	foundItems[id] = true;
 end
 
 function saveState()
 	print();
 
-	fs.delete("prey");
-	local file = io.open("prey", "w");
+	fs.delete("memory");
+	local file = io.open("memory", "w");
 	
 	file:write(state.x .. "\n");
 	file:write(state.y .. "\n");
@@ -928,9 +925,9 @@ function saveState()
 end
 
 function readState()
-	if not fs.exists("prey") then return; end
+	if not fs.exists("memory") then return; end
 
-	local file = io.open("prey");
+	local file = io.open("memory");
 
 	local i = 0;
 	for line in file:lines() do
