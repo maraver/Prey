@@ -161,7 +161,7 @@ function findSaplings(pRadius)
 		turtle.goto(state.x + pRadius, state.y, state.z - pRadius);
 		turtle.face(EAST);
 		
-		turtle.removeUnwanted(SAPLING);
+		turtle.freeSlot(SAPLING, 12);
 	end
     
 	turtle.select(SAPLING);
@@ -172,53 +172,21 @@ function findSaplings(pRadius)
 	turtle.suckUp();
 	
     for i=1, (pRadius*2)*4 - 2 do -- can skip last 2
-		for face=1, 4 do			
-			if turtle.detect() then 
-				turtle.dig(); 
-				if not hasFound(SAPLING) then
-					turtle.freeSlot(SAPLING, SAPLING + 2);
-				end
-			end
-			
-			-- If picked up something and hasn't found sapling
-			if (turtle.suck() or turtle.suckDown()) and not hasFound(SAPLING) then 
-				doSaplingCheck();
-			end
-			
-			turtle.turnRight();
-		end
+		searchAndCheckSaplings();
        
 		turtle.forward();
-	   
 		if i % (pRadius*2) == 0 then
 			turtle.turnRight();
 		end
         
-        if not hasFound(SAPLING) then
-			turtle.freeSlot(SAPLING, SAPLING + 2);
-        end
+        if not hasFound(SAPLING) then turtle.freeSlot(SAPLING, 12); end
 		turtle.select(SAPLING);
     end
 	
+	-- If needed check around center
 	if pRadius > 2 then
 		turtle.goto(state.x - pRadius, state.y, state.z + pRadius);
-		
-		-- Sapling check
-		for face=1, 4 do			
-			if turtle.detect() then 
-				turtle.dig(); 
-				if not hasFound(SAPLING) then
-					turtle.freeSlot(SAPLING, SAPLING + 2);
-				end
-			end
-			
-			-- If picked up something and hasn't found sapling
-			if (turtle.suck() or turtle.suckDown()) and not hasFound(SAPLING) then 
-				doSaplingCheck();
-			end
-			
-			turtle.turnRight();
-		end
+		searchAndCheckSaplings();
 	end
 end
 
@@ -321,15 +289,15 @@ function buildBaseA()
 		for z=1,5 do
 			if turtle.detectDown() then turtle.digDown(); end
 			
-			if (x == 1 or x == 5) and (z == 1 or z == 5) then
+			if (x == 3 and z == 3) then -- or ((x == 1 or x == 5) and (z == 1 or z == 5))
 				turtle.select(DIRT);
 				turtle.placeDown();
 			
 				-- Limiting top block
 				turtle.select(COBBLE);
-				for y=1, 6 do turtle.up(); end
+				for y=1, 7 do turtle.up(); end
 				turtle.placeUp();
-				for y=1, 6 do turtle.down(); end
+				for y=1, 7 do turtle.down(); end
 			else 
 				turtle.placeDown();
 			end
@@ -353,60 +321,86 @@ end
 		Grow a tree
 --]]
 function plantTrees()
-	turtle.goto(state.home.x, state.home.y, state.home.z);
+	-- (3,3) Sapling
+	turtle.goto(state.home.x+2, state.home.y, state.home.z-2);
 	turtle.face(NORTH);
-	turtle.select(SAPLING);
+	placeSapling();
+	if turtle.getItemCount(SAPLING) <= 0 then return; end
 	
 	-- (1,1) Sapling
+	turtle.face(EAST);
 	turtle.forward();
 	turtle.forward();
 	turtle.face(SOUTH);
-	turtle.place();
+	placeSapling();
+	if turtle.getItemCount(SAPLING) <= 0 then return; end
 	
 	-- (1,5) Sapling
 	turtle.face(NORTH);
 	turtle.forward();
 	turtle.forward();
-	turtle.place();
+	placeSapling();
+	if turtle.getItemCount(SAPLING) <= 0 then return; end
 	
 	-- (5, 5) Sapling
 	turtle.face(WEST);
 	for i=1,4 do turtle.forward(); end
 	turtle.face(NORTH);
-	turtle.place();
+	placeSapling();
+	if turtle.getItemCount(SAPLING) <= 0 then return; end
 	
 	-- (5, 1) Sapling
 	turtle.face(SOUTH);
 	turtle.forward();
 	turtle.forward();
-	turtle.place();
+	placeSapling();
+	if turtle.getItemCount(SAPLING) <= 0 then return; end
 end
 
 function farmTrees()
-	turtle.goHome();
-	turtle.face(NORTH);
 	turtle.select(LOG);
+	if state.treesPlanted <= 0 then return; end
 
-	-- Tree (1,1)
+	-- (3,3) Tree
+	turtle.goto(state.home.x+2, state.home.y, state.home.z-2);
+	turtle.face(NORTH);
 	waitThenCutTree();
+	
+	-- Tree (1,1)
+	if state.treesPlanted > 0 then
+		turtle.face(EAST);
+		turtle.forward();
+		turtle.forward();
+		turtle.face(SOUTH);
+		waitThenCutTree();
+	end
 	
 	-- Tree (1,5)
-	for i=1,3 do turtle.forward(); end
-	turtle.goto(state.x + 3, state.y, state.z);
-	waitThenCutTree();
+	if state.treesPlanted > 0 then
+		turtle.face(NORTH);
+		for i=1,3 do turtle.forward(); end
+		turtle.goto(state.x + 3, state.y, state.z);
+		waitThenCutTree();
+	end
 	
 	-- Tree (5,5)
-	turtle.face(WEST);
-	for i=1,3 do turtle.forward(); end
-	waitThenCutTree();
+	if state.treesPlanted > 0 then
+		turtle.face(WEST);
+		for i=1,3 do turtle.forward(); end
+		waitThenCutTree();
+	end
 	
 	-- Tree (5, 1)
-	turtle.face(SOUTH);
-	for i=1,3 do turtle.forward(); end
-	waitThenCutTree();
+	if state.treesPlanted > 0 then
+		turtle.face(SOUTH);
+		for i=1,3 do turtle.forward(); end
+		waitThenCutTree();
+	end
+	
+	turtle.refuel(true, turtle.getItemCount(LOG) - state.logsToKeep);
 	
 	-- setup for findSaplings
-	turtle.goHome();
+	turtle.goto(state.home.x + 5, state.home.y, state.home.z);
 	turtle.face(NORTH);
 	
 	-- Wait
@@ -417,6 +411,14 @@ function farmTrees()
 	
 	-- Reset sapling for farming
 	plantTrees();
+end
+
+--[[
+	Task:
+		build a chest for temp storage
+--]]
+function buildChest()
+	state.logsToKeep = 1;
 end
 
 --[[
@@ -721,6 +723,24 @@ end
 	Checks
 --]]
 
+function searchAndCheckSaplings()
+	for face=1, 4 do			
+		if turtle.detect() then 
+			turtle.dig(); 
+			if not hasFound(SAPLING) then
+				turtle.freeSlot(SAPLING, 12);
+			end
+		end
+		
+		-- If picked up something and hasn't found sapling
+		if (turtle.suck() or turtle.suckDown()) and not hasFound(SAPLING) then 
+			doSaplingCheck();
+		end
+		
+		turtle.turnRight();
+	end
+end
+
 -- RETURNS true if found saplings on this check
 function doSaplingCheck()
 	if hasFound(SAPLING) then
@@ -789,13 +809,20 @@ function refuelWithSticks()
 	turtle.digDown();   -- Reconver dirt
 end
 
+function placeSapling()
+	turtle.select(SAPLING);
+	if turtle.place() then
+		state.treesPlanted = state.treesPlanted + 1;
+	end
+end
+
 function waitThenCutTree()
 	if turtle.detect() then
+		state.treesPlanted = state.treesPlanted - 1;
 		print(" - Waiting for tree to grow");
 		while not turtle.compare() do os.sleep(1); end
 		turtle.forward();
 		cutTree(1);
-		turtle.refuel(true, turtle.getItemCount(LOG) - 1);
 	else
 		print(" - No tree or sapling found");
 	end
@@ -920,6 +947,8 @@ function saveState()
 	file:write(state.task .. "\n");
 	file:write(state.mineX .. "\n");
 	file:write(state.mineZ .. "\n");
+	file:write(state.treesPlanted .. "\n");
+	file:write(state.logsToKeep .. "\n");
 	
 	file:close();
 end
@@ -944,11 +973,16 @@ function readState()
 		elseif i == 8  then state.task = line;
 		elseif i == 9  then state.mineX = line;
 		elseif i == 10 then state.mineZ = line;
+		elseif i == 11 then state.treesPlanted = line;
+		elseif i == 12 then state.logsToKeep = line;
 		else error("Prey state file overflow!");
 		end
 		
 		i = i + 1;
 	end
+	
+	-- DON'T FORGET TO UPDATE
+	if i < 12 then error("Prey state file undeflow!"); end
 	
 	file:close();
 end
@@ -988,6 +1022,9 @@ state = {
 		face = 0
 	},
 	
+	treesPlanted = 0,
+	logsToKeep = 3,
+	
 	mineX = 0,
 	mineZ = 0
 };
@@ -995,7 +1032,7 @@ state = {
 foundItems = { };
 
 tasks = {
-	findFirstTree, findDirt, findMoreTrees, findSaplings, findCobblestone, checkForCoal, buildBaseA, plantTrees, farmTrees, findIron, farmTrees
+	findFirstTree, findDirt, findMoreTrees, findSaplings, findCobblestone, checkForCoal, buildBaseA, plantTrees, farmTrees, buildChest, findIron, farmTrees
 };
 
 ---------------------
