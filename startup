@@ -98,6 +98,8 @@ function findMoreTrees()
 						if (turtle.compareUp() or turtle.compareDown()) and turtle.refuel(true) then
 							cutTree(1, 3);
 						elseif doSaplingCheck() then
+							foundItems[SAPLING] = false;
+						
 							local oldFace = state.face;
 							turtle.faceBlock(0, 0);
 							if turtle.detect() then turtle.dig(); end
@@ -141,14 +143,60 @@ function findMoreTrees()
 			turtle.turnRight();
 		end
 	end
-	
-    turtle.goHome();
     
 	refuelWithSticks();
 end
 
 --[[
-	Fourth Task:
+	Task:
+		build a chest for temp storage
+--]]
+function buildChest()
+	state.logsToKeep = 1;
+	
+	turtle.goto(state.home.x, state.home.y + 10, state.home.z, SOUTH);
+	
+	-- Save a log
+	turtle.select(LOG);
+	if turtle.detectUp() then turtle.digUp(); end
+	turtle.placeUp();
+	
+	-- Save dirt
+	turtle.select(DIRT);
+	if turtle.detectDown() then turtle.digDown(); end
+	turtle.placeDown();
+	
+	-- Remove extra
+	turtle.removeUnwanted(LOG + 1);
+	turtle.select(LOG);
+	
+	-- Get 8 planks
+	turtle.craft();
+	turtle.refuel(true, turtle.getItemCount(LOG) - 8);
+	
+	-- Get chest
+	turtle.transferTo(2, 1);
+	turtle.transferTo(3, 1);
+	turtle.transferTo(5, 1);
+	turtle.transferTo(7, 1);
+	turtle.transferTo(9, 1);
+	turtle.transferTo(10, 1);
+	turtle.transferTo(11, 1);
+	turtle.craft();
+	
+	turtle.place();
+	
+	-- Recover log
+	turtle.digUp();
+	
+	-- Recover dirt
+	turtle.digDown();
+	
+	turtle.goHome();
+end
+
+--[[
+	Task:
 		collect sapplings from first tree
 --]]
 function findSaplings(pRadius)
@@ -165,11 +213,6 @@ function findSaplings(pRadius)
 	end
     
 	turtle.select(SAPLING);
-	
-	-- Give saplings some more time
-	print(" - Waiting 30 seconds for saplings...");
-	os.sleep(30);
-	turtle.suckUp();
 	
     for i=1, (pRadius*2)*4 - 2 do -- can skip last 2
 		searchAndCheckSaplings();
@@ -400,25 +443,17 @@ function farmTrees()
 	turtle.refuel(true, turtle.getItemCount(LOG) - state.logsToKeep);
 	
 	-- setup for findSaplings
-	turtle.goto(state.home.x + 5, state.home.y, state.home.z);
-	turtle.face(NORTH);
+	turtle.goto(state.home.x + 6, state.home.y, state.home.z);
+	turtle.face(SOUTH);
 	
 	-- Wait
-	print(" - Waiting 2 minutes for saplings...");
-	os.sleep(120);
+	print(" - Waiting 3 minutes for saplings...");
+	os.sleep(180);
 	
 	findSaplings(2);
 	
 	-- Reset sapling for farming
 	plantTrees();
-end
-
---[[
-	Task:
-		build a chest for temp storage
---]]
-function buildChest()
-	state.logsToKeep = 1;
 end
 
 --[[
@@ -487,6 +522,15 @@ function findIron()
 	
 	state.mineX = state.x;
 	state.mineZ = state.z;
+end
+
+function refuelWithTrees()
+	while turtle.getFuelLevel() < 250 do
+		farmTrees();
+	end
+	
+	-- Continue with previous task
+	state.task = state.task - 2;
 end
 
 --[[
@@ -646,7 +690,8 @@ turtle.goto = function(pX, pY, pZ, pFace)
 		turtle.up();
 	end
 	
-	if ((state.y > state.home.y and pY < state.home.y) or (state.y < state.home.y and pY > state.home.y)) then
+	if ((state.y > state.home.y and pY <= state.home.y) or (state.y < state.home.y and pY >= state.home.y))
+			and (pX ~= state.home.x or pY ~= state.home.y or pZ ~= state.home.z) then
 		turtle.goHome();
 	end
 	
@@ -794,19 +839,41 @@ function refuelWithSticks()
     if turtle.detectUp() then turtle.digUp(); end
     turtle.placeUp();
 	
+	-- Save extra logs
+	local startFace = state.face();
+	for i=1, state.logsToKeep-1 do
+		if turtle.detect() then turtle.dig(); end
+		turtle.place();
+		
+		if i < state.logsToKeep-1 then
+			turtle.turnRight();
+		end
+	end
+	turtle.face(startFace);
+	
 	turtle.select(DIRT); -- Save dirt
 	if turtle.detectDown() then turtle.digDown(); end
 	turtle.placeDown();
 	
-	turtle.removeUnwanted(DIRT + 1); -- Remove extra
-	
+	turtle.removeUnwanted(LOG + 1); -- Remove extra
 	turtle.select(LOG); -- Planks
+	
 	turtle.craft();   
 	turtle.transferTo(5, turtle.getItemCount(1) / 2);
 	turtle.craft();     -- Sticks
 	turtle.refuel(true, 64);
     turtle.digUp();     -- Recover log
-	turtle.digDown();   -- Reconver dirt
+	turtle.digDown();   -- Recover dirt
+	
+	-- Recover extra logs
+	for i=1, state.logsToKeep-1 do
+		turtle.dig();
+		
+		if i < state.logsToKeep-1 then
+			turtle.turnRight();
+		end
+	end
+	turtle.face(startFace);	
 end
 
 function placeSapling()
@@ -1032,7 +1099,8 @@ state = {
 foundItems = { };
 
 tasks = {
-	findFirstTree, findDirt, findMoreTrees, findSaplings, findCobblestone, checkForCoal, buildBaseA, plantTrees, farmTrees, buildChest, findIron, farmTrees
+	findFirstTree, findDirt, findMoreTrees, buildChest, findSaplings, findCobblestone, checkForCoal, 
+	buildBaseA, plantTrees, farmTrees, findIron, refuelWithTrees
 };
 
 ---------------------
