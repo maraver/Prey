@@ -9,7 +9,7 @@ LOG, DIRT, SAPLING, COBBLE, COAL = 1, 2, 3, 4, 5;
 
 -- Maximum amount to go up to avoid the ground
 MAX_AVOID = 4;
-HOME_HEIGHT = 5;
+HOME_HEIGHT = 3;
 
 ----------------------------------------------------------------------
 -- Tasks
@@ -73,14 +73,15 @@ end
 		find more near by trees
 --]]
 function findMoreTrees()
-	turtle.goto(state.home.x, state.home.y + 2, state.home.z);
+	turtle.goto(state.home.x, state.home.y + 3, state.home.z);
 	
 	-- save some logs for making a chest
 	state.extraLogsToKeep = 2;
 	
 	local oldCount = turtle.getItemCount(1);
-	for sideLng = 1, 8 do
-		for corners = 0, 1 do
+	for sideLng = 2, 8, 2 do -- step by 2
+		turtle.forward();
+		for edge = 0, 1 do
 			for xz = 1, sideLng do
 				turtle.select(LOG);
 				
@@ -94,31 +95,12 @@ function findMoreTrees()
 						
 						refuelWithSticks();
 						oldCount = turtle.getItemCount(1);
-					elseif turtle.getItemCount(3) > 0 then                
-						turtle.select(3);
-						-- Check is an unknown tree, if is cut it down using it all as fuel
-						if (turtle.compareUp() or turtle.compareDown()) and turtle.refuel(true) then
-							cutTree(1, 3);
-						elseif doSaplingCheck() then
-							foundItems[SAPLING] = false;
-						
-							local oldFace = state.face;
-							turtle.faceBlock(0, 0);
-							if turtle.detect() then turtle.dig(); end
-							turtle.select(SAPLING);
-							turtle.drop();
-							turtle.face(oldFace);
-						elseif state.y <= state.home.y + MAX_AVOID and turtle.dig() and turtle.place() then
-							turtle.up();
-						end
-						turtle.clearSlot(3);
-					elseif sideLng >= 8 then -- only need to check on last side
-						-- Dug with no drop (leaves). Check for tree
+					else
 						local startFace = state.face;
 						
 						for i=1, 3 do
 							-- If in middle of a side don't need to check directly infront
-							if xz ~= sideLng then turtle.turnRight(); end
+							if xz < sideLng then turtle.turnRight(); end
 						
 							if turtle.compare() then
 								local oldX, oldZ = state.x, state.z;
@@ -136,6 +118,27 @@ function findMoreTrees()
 						end
 						
 						turtle.face(startFace);
+					end
+					
+					-- Check unknown object
+					if turtle.getItemCount(3) > 0 then                
+						turtle.select(3);
+						-- Check is an unknown tree, if is cut it down using it all as fuel
+						if (turtle.compareUp() or turtle.compareDown()) and turtle.refuel(true) then
+							cutTree(1, 3);
+						elseif doSaplingCheck() then
+							foundItems[SAPLING] = false;
+						
+							local oldFace = state.face;
+							turtle.faceBlock(0, 0);
+							if turtle.detect() then turtle.dig(); end
+							turtle.select(SAPLING);
+							turtle.drop();
+							turtle.face(oldFace);
+						elseif state.y <= state.home.y + MAX_AVOID and turtle.dig() and turtle.place() then
+							turtle.up();
+						end
+						turtle.clearSlot(3);
 					end
 				else
 					-- Always go forward, just don't need to do any checks
