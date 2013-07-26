@@ -163,11 +163,6 @@ function findSaplings()
     turtle.removeUnwanted(SAPLING);
 	turtle.select(SAPLING);
 	
-	-- Give saplings some more time
-	print("Waiting 30 seconds for saplings...");
-	os.sleep(30);
-	turtle.suckUp();
-	
     local found = false;
     for i=1, 14 do -- can skip last 2
 		turtle.forward();
@@ -593,8 +588,8 @@ function setHomeToHere()
 end
 
 oldPrint = print;
-function printStatus(var)
-	oldPrint(var);
+print = function(var)
+	if var ~= nil then oldPrint(var); end
 
 	local x,y = term.getCursorPos();
 	term.setCursorPos(1, 1);
@@ -605,7 +600,7 @@ function printStatus(var)
 end
 
 function saveState()
-	printStatus();
+	print();
 
 	fs.delete("prey");
 	local file = io.open("prey", "w");
