@@ -254,7 +254,7 @@ function findCobblestone()
     state.home.y = -state.y;
     state.y = 0;
     
-    -- Dig to top
+    -- Dig to top. Must be with while loop because of avoid home
     turtle.forward();
     while state.y < state.home.y or turtle.detectUp() do turtle.up(); end
     
@@ -433,9 +433,9 @@ function findIron()
 				end
 			else
 				turns = 0;
-				if state.y < 40 and turtle.detectUp() then
+				if state.y < 45 and turtle.detectUp() then
 					turtle.up();
-				elseif state.y > 30 and turtle.detectDown() then
+				elseif state.y > 35 and turtle.detectDown() then
 					turtle.down();
 				else
 					turtle.down();
@@ -662,22 +662,22 @@ end
 turtle.goto = function(pX, pY, pZ, pFace)
 	assert(type(pX) == "number" and type(pY) == "number" and type(pZ) == "number", "Goto location must be given as 3 numbers");
 	
-	-- Avoid breaking home
+	-- Avoid platform
 	if state.y == state.home.y - 1 then
 		turtle.down();
-	elseif state.y == state.home.y then
-		turtle.up();
 	end
-
+	
+	-- Avoid home
 	if pX ~= state.home.x or pY ~= state.home.y or pZ ~= state.home.z then
 		if state.y > state.home.y and pY <= state.home.y then
 			turtle.goHome();
 			
-			while state.y >= state.home.y - 1 do turtle.down(); end
+			while state.y >= state.home.y - 1 and state.y > pY do turtle.down(); end
 		elseif (state.y < state.home.y and pY >= state.home.y) then
 			turtle.goHome();
 			
-			while state.y >= state.home.y - 1 do turtle.up(); end
+			while state.y <= state.home.y - 1 and state.y < pY do turtle.up(); end
+		
 		end
 	end
 	
@@ -1101,7 +1101,7 @@ state = {
 	},
 	
 	mine = {
-		y = 36,
+		y = 40,
 		idx = 1
 	},
 	
