@@ -532,7 +532,7 @@ turtle.refuel = function(pForce, pAmount)
 	if pForce or turtle.getFuelLevel() < 1 then
 		if pAmount == nil then pAmount = 1; end
 	
-		if pAmout >= turtle.getItemCount(state.slot) then
+		if hasFound(state.slot) and pAmount >= turtle.getItemCount(state.slot) then
 			return false;
 		else
 			return oldTurtle.refuel(pAmount);
