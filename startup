@@ -76,7 +76,7 @@ function findMoreTrees()
 				if turtle.dig() then
 					turtle.forward();
 					
-					if turtle.getItemCount(1) > oldCount or turtle.compareDown() then
+					if turtle.getItemCount(1) > oldCount or turtle.compareDown() or turtle.compareUp() then
 						-- If close check for branches
 						local areBranches = cutTree(1, 2, sideLng < 3);
 						if areBranches then error("This tree is too big!"); end
@@ -427,7 +427,7 @@ turtle.face = function(pFace)
 	assert(pFace >= 0 and pFace <= 3, "Invalid direction " .. pFace);
 	
 	-- Handle rap-around
-	if ((state.face + 2) % 4) - pFace < pFace - state.face then
+	if (state.face < pFace and state.face + 4 - pFace < 2) or (state.face > pFace and pFace + 4 - state.face < 2) then
 		while (pFace ~= state.face) do turtle.turnRight(); end
 	else
 		while (pFace ~= state.face) do turtle.turnLeft(); end
