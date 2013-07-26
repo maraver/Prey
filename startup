@@ -412,7 +412,7 @@ function findIron()
 	turtle.face(NORTH);
 	
 	local posX = true;
-	while turtle.getFuelLevel() > 100 do
+	while turtle.getFuelLevel() > 100 + math.abs(state.x) + math.abs(state.z) do
 		turtle.select(1);
 		
 		local turns = 0;
@@ -458,7 +458,7 @@ function findIron()
 		
 		posX = not posX;
 		
-		if turtle.getFuelLevel() <= 100 then
+		if turtle.getFuelLevel() < 200 then
 			refuelWithCoal();
 			turtle.select(1);
 		end
