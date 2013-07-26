@@ -256,13 +256,10 @@ function findCobblestone()
     
     -- Dig to top
     turtle.forward();
-    turtle.goto(state.x, state.home.y, state.z);
+    while state.y < state.home.y or turtle.detectUp() do turtle.up(); end
     
     -- Get any saplings that may have been there
     turtle.suckUp();
-    
-    -- Break surface if needed
-    while turtle.detectUp() do turtle.up(); end
     
     -- Cobble must be one of first new blocks broken
     local highSlot, highSlotCount = 4, turtle.getItemCount(4);
