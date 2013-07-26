@@ -18,7 +18,7 @@ function findFirstTree()
     turtle.removeUnwanted(LOG);
     turtle.select(LOG);
     
-    while true do
+	for i=1, 4 do
         -- Get first wood
         if turtle.detect() then
             turtle.dig();
@@ -34,7 +34,7 @@ function findFirstTree()
             	-- Get rest of the wood
             	local areBranches = cutTree(1, 2, true);
             	if areBranches then
-            		error(" - This tree is too big!");
+            		error("This tree is too big!");
             	end
             	
             	-- Refuel with sticks
@@ -45,7 +45,7 @@ function findFirstTree()
             	turtle.refuel(true, 64);
             	turtle.digUp();   -- Recover wood
 				
-            	break;
+            	return;
             else
             	turtle.drop();
             end
@@ -53,6 +53,8 @@ function findFirstTree()
 			turtle.turnLeft();
 		end
 	end
+	
+	error("I couldn't find a tree!");
 end
 
 --[[
@@ -197,7 +199,7 @@ function findSaplings()
 
 	-- Check for last sapling at home
 	turtle.select(SAPLING)
-	turtle.goto(state.home.x, state.home.y + 1, state.home.z);
+	turtle.goHome();
 	turtle.suckDown();
 	if not found then
 		-- Keep sapling slot clean without dropping
@@ -232,7 +234,7 @@ function findCobblestone()
     while turtle.detectUp() do turtle.up(); end
     
     -- Cobble must be one of first new blocks broken
-    local highSlot, highSlotCount = 4, turtle.getItemCount(highSlot);
+    local highSlot, highSlotCount = 4, turtle.getItemCount(4);
     for slot = 5, 10 do
         if turtle.getItemCount(slot) > highSlotCount then
             highSlot = slot;
@@ -425,8 +427,12 @@ end
 turtle.face = function(pFace)
 	assert(pFace >= 0 and pFace <= 3, "Invalid direction " .. pFace);
 	
-	while (pFace > state.face) do turtle.turnRight(); end
-	while (pFace < state.face) do turtle.turnLeft(); end
+	-- Handle rap-around
+	if ((state.face + 2) % 4) - pFace < pFace - state.face then
+		while (pFace ~= state.face) do turtle.turnRight(); end
+	else
+		while (pFace ~= state.face) do turtle.turnLeft(); end
+	end
 end
 
 turtle.goto = function(pX, pY, pZ)
@@ -461,7 +467,17 @@ end
 
 turtle.clearSlot = function(pSlot)
 	turtle.select(pSlot);
-	turtle.refuel(true);
+	if not turtle.refuel(true) then
+	
+		-- If it's not fuel try to save it
+		local requiredSpace = turtle.getItemCount(pSlot);
+		for i=1, 16 do
+			if i ~= pSlop and turtle.compareTo(i) then
+				turtle.transferTo(i);
+				break;
+			end
+		end
+	end
 	turtle.drop();
 end
 
