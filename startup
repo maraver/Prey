@@ -46,6 +46,7 @@ function findFirstTree()
             	turtle.refuel(true, 64);
             	turtle.digUp();   -- Recover wood
 				
+				setFound(LOG);
             	return;
             else
             	turtle.drop();
@@ -143,6 +144,8 @@ function findDirt()
     turtle.select(DIRT);    
 	
     turtle.digDown();
+	
+	setFound(DIRT);
 end
 
 --[[
@@ -189,7 +192,9 @@ function findSaplings(found)
                 turtle.select(SAPLING);
                 if not turtle.placeUp() and turtle.placeDown() then
                 	turtle.digDown();
+					
                     found = true;
+					setFound(SAPLING);
                 end
                 
                 turtle.down();
@@ -253,6 +258,8 @@ function findCobblestone()
         turtle.freeSlot(4, 16);
         turtle.freeSlot(highSlot, 4);
     end
+	
+	setFound(COBBLE);
 end
 
 --[[
@@ -279,6 +286,8 @@ function checkForCoal()
 				turtle.select(slot);
             	turtle.transferTo(COAL);
             end
+			
+			setFound(COAL);
             break;
         end
     end
@@ -337,16 +346,16 @@ end
 		Grow a tree
 --]]
 function plantTree()
-	turtle.goto(state.home.x + 3, state.home.y, state.home.z - 1);
-	turtle.face(WEST);
+	turtle.goto(state.home.x + 3, state.home.y, state.home.z - 3);
+	turtle.face(EAST);
 	
 	turtle.select(SAPLING);
 	turtle.place();
 end
 
 function farmTree()
-	turtle.goto(state.home.x + 3, state.home.y, state.home.z - 1);
-	turtle.face(WEST);
+	turtle.goto(state.home.x + 3, state.home.y, state.home.z - 3);
+	turtle.face(EAST);
 	turtle.select(LOG);
 
 	print(" - Waiting for tree to grow");
@@ -366,6 +375,11 @@ function farmTree()
 	os.sleep(50);
 	turtle.suckUp();
 	
+	for i=1,3 do
+		turtle.suck();
+		turtle.turnRight();
+	end
+	
 	findSaplings(true);
 	
 	-- Reset sapling for farming
@@ -381,7 +395,27 @@ function findIron()
     turtle.forward();
     
     -- Ore commong from (30-40)
-    turtle.goto(state.x, 35, state.z);
+    turtle.goto(state.home.x - 1, 35, state.home.z);
+	turtle.face(NORTH);
+	
+	local posX = true;
+	while turtle.getFuelLevel() > 100 do
+		for i=1,16 do
+			turtle.forward();
+		end
+		
+		if posX then
+			turtle.turnRight();
+			turtle.forward();
+			turtle.turnRight();
+		else
+			turtle.turnLeft();
+			turtle.forward();
+			turtle.turnLeft();
+		end
+		
+		posX = not posX;
+	end
 end
 
 --[[
@@ -692,6 +726,18 @@ print = function(var)
 	term.setCursorPos(x, y);
 end
 
+function hasFound(id)
+	assert(type(id) == "number");
+	
+	return foundItems[id] == true;
+end
+
+function setFound(id)
+	assert(type(id) == "number");
+	
+	foundItems[id] = true;
+end
+
 function saveState()
 	print();
 
@@ -773,6 +819,8 @@ state = {
 		face = 0
 	}
 };
+
+foundItems = { };
 
 tasks = {
 	findFirstTree, findMoreTrees, findDirt, findSaplings, findCobblestone, checkForCoal, buildBaseA, plantTree, farmTree, findIron
