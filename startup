@@ -9,6 +9,7 @@ LOG, DIRT, SAPLING, COBBLE, COAL = 1, 2, 3, 4, 5;
 
 -- Maximum amount to go up to avoid the ground
 MAX_AVOID = 4;
+HOME_HEIGHT = 5;
 
 ----------------------------------------------------------------------
 -- Tasks
@@ -78,7 +79,7 @@ function findMoreTrees()
 	state.extraLogsToKeep = 2;
 	
 	local oldCount = turtle.getItemCount(1);
-	for sideLng = 1, 10 do
+	for sideLng = 1, 8 do
 		for corners = 0, 1 do
 			for xz = 1, sideLng do
 				turtle.select(LOG);
@@ -111,7 +112,7 @@ function findMoreTrees()
 							turtle.up();
 						end
 						turtle.clearSlot(3);
-					elseif sideLng >= 10 then -- only need to check on last side
+					elseif sideLng >= 8 then -- only need to check on last side
 						-- Dug with no drop (leaves). Check for tree
 						local startFace = state.face;
 						
@@ -156,7 +157,7 @@ function buildChest()
 	-- No longer need extra logs
 	state.extraLogsToKeep = 0;
 	
-	turtle.goto(state.home.x, state.home.y + 10, state.home.z, SOUTH);
+	turtle.goto(state.home.x, state.home.y + HOME_HEIGHT, state.home.z, SOUTH);
 	
 	-- Save a log
 	turtle.select(LOG);
@@ -326,7 +327,7 @@ end
 function buildBaseA()
     -- Finalize home
 	state.home.face = NORTH;
-    state.home.y = state.home.y + 10;
+    state.home.y = state.home.y + HOME_HEIGHT;
 	turtle.goHome();
 	
 	turtle.select(COBBLE);
@@ -532,7 +533,7 @@ turtle.refuel = function(pForce, pAmount)
 	if pForce or turtle.getFuelLevel() < 1 then
 		if pAmount == nil then pAmount = 1; end
 	
-		if hasFound(state.slot) and pAmount >= turtle.getItemCount(state.slot) then
+		if not pForce and hasFound(state.slot) and pAmount >= turtle.getItemCount(state.slot) then
 			return false;
 		else
 			return oldTurtle.refuel(pAmount);
