@@ -86,13 +86,12 @@ function findMoreTrees()
 						end
 						
 						turtle.clearSlot(2);
-					else
-						-- Dug with no result, leaves. Check for tree
+					elseif sideLng >= 10 then -- only need to check on last side
+						-- Dug with no drop (leaves). Check for tree
 						local startFace = state.face;
 						
 						for i=1, 3 do
 							-- If in middle of a side don't need to check directly infront
-							-- Will get that next step
 							if xz ~= sideLng then turtle.turnRight(); end
 						
 							if turtle.compare() then
