@@ -74,9 +74,10 @@ end
 function findMoreTrees()
 	turtle.goto(state.home.x, state.home.y + 2, state.home.z);
 	
-	local oldCount = turtle.getItemCount(1);
+	-- save some logs for making a chest
+	state.extraLogsToKeep = 2;
 	
-	-- loop
+	local oldCount = turtle.getItemCount(1);
 	for sideLng = 1, 10 do
 		for corners = 0, 1 do
 			for xz = 1, sideLng do
@@ -152,7 +153,8 @@ end
 		build a chest for temp storage
 --]]
 function buildChest()
-	state.logsToKeep = 1;
+	-- No longer need extra logs
+	state.extraLogsToKeep = 0;
 	
 	turtle.goto(state.home.x, state.home.y + 10, state.home.z, SOUTH);
 	
@@ -442,7 +444,7 @@ function farmTrees()
 		waitThenCutTree();
 	end
 	
-	turtle.refuel(true, turtle.getItemCount(LOG) - state.logsToKeep);
+	turtle.refuel(true, turtle.getItemCount(LOG) - 1);
 	
 	-- setup for findSaplings
 	turtle.goto(state.home.x + 6, state.home.y, state.home.z);
@@ -466,7 +468,7 @@ function findIron()
 	turtle.select(1);
 
     -- Ore commong from (30-40)
-    turtle.goto(state.home.x - 1, 35, state.home.z);
+    turtle.goto(state.home.x - 1, 35, state.home.z); -- 35?
 	turtle.face(NORTH);
 	
 	local posX = true;
@@ -842,12 +844,12 @@ function refuelWithSticks()
     turtle.placeUp();
 	
 	-- Save extra logs
-	local startFace = state.face();
-	for i=1, state.logsToKeep-1 do
+	local startFace = state.face;
+	for i=1, state.extraLogsToKeep do
 		if turtle.detect() then turtle.dig(); end
 		turtle.place();
 		
-		if i < state.logsToKeep-1 then
+		if i < state.extraLogsToKeep then
 			turtle.turnRight();
 		end
 	end
@@ -868,10 +870,10 @@ function refuelWithSticks()
 	turtle.digDown();   -- Recover dirt
 	
 	-- Recover extra logs
-	for i=1, state.logsToKeep-1 do
+	for i=1, state.extraLogsToKeep do
 		turtle.dig();
 		
-		if i < state.logsToKeep-1 then
+		if i < state.extraLogsToKeep then
 			turtle.turnRight();
 		end
 	end
@@ -981,8 +983,9 @@ print = function(var)
 	local x,y = term.getCursorPos();
 	term.setCursorPos(1, 1);
 	term.clearLine();	
-	write("Prey v" .. VER .. "   Task: " .. state.task .. "   Fuel: " .. turtle.getFuelLevel() .. "\n");
-	for i=1, term.getSize() do write("-"); end
+	write("Task: " .. state.task .. "   Fuel: " .. turtle.getFuelLevel() .. "   Loc: " .. state.x .. "," .. state.y .. "," .. state.z .. "\n");
+	write("-- PREY v" .. VER .. " ");
+	for i=term.getCursorPos(), term.getSize() do write("-"); end
 	term.setCursorPos(x, y);
 end
 
@@ -1017,7 +1020,7 @@ function saveState()
 	file:write(state.mineX .. "\n");
 	file:write(state.mineZ .. "\n");
 	file:write(state.treesPlanted .. "\n");
-	file:write(state.logsToKeep .. "\n");
+	file:write(state.extraLogsToKeep .. "\n");
 	
 	file:close();
 end
@@ -1043,7 +1046,7 @@ function readState()
 		elseif i == 9  then state.mineX = line;
 		elseif i == 10 then state.mineZ = line;
 		elseif i == 11 then state.treesPlanted = line;
-		elseif i == 12 then state.logsToKeep = line;
+		elseif i == 12 then state.extraLogsToKeep = line;
 		else error("Prey state file overflow!");
 		end
 		
@@ -1092,7 +1095,7 @@ state = {
 	},
 	
 	treesPlanted = 0,
-	logsToKeep = 3,
+	extraLogsToKeep = 0,
 	
 	mineX = 0,
 	mineZ = 0
