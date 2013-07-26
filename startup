@@ -477,6 +477,19 @@ function refuelWithTrees()
 	state.task = state.task - 2;
 end
 
+function clearFullSlotsPast(pSlot)
+	local oldSlot = state.slot;
+	if turtle.getItemCount(14) > 0 then
+		for i=pSlot,16 do
+			if turtle.getItemCount(i) >= 64 then
+				turtle.select(i);
+				turtle.drop();
+			end
+		end
+	end
+	turtle.select(oldSlot);
+end
+
 --[[
 	New Turtle Util
 --]]
@@ -484,8 +497,30 @@ oldTurtle = {
 	turnRight = turtle.turnRight, turnLeft = turtle.turnLeft,
 	forward = turtle.forward, back = turtle.back,
 	up = turtle.up, down = turtle.down,
-	refuel = turtle.refuel
+	refuel = turtle.refuel,
+	dig = turtle.dig, digUp = turtle.digUp, digDown = turtle.digDown,
+	select = turtle.select
 };
+
+turtle.select = function(pSlot)
+	oldTurtle.select();
+	state.slot = pSlot;
+end
+
+turtle.dig = function()
+	oldTurtle.dig();
+	clearFullSlotsPast(7);
+end
+
+turtle.digUp = function()
+	oldTurtle.digUp();
+	clearFullSlotsPast(7);
+end
+
+turtle.digDown = function()
+	oldTurtle.digDown();
+	clearFullSlotsPast(7);
+end
 
 turtle.refuel = function(pForce, pAmount)	
 	if pForce or turtle.getFuelLevel() < 1 then
@@ -968,6 +1003,7 @@ function saveState()
 	file:write(state.mineZ .. "\n");
 	file:write(state.treesPlanted .. "\n");
 	file:write(state.extraLogsToKeep .. "\n");
+	file:write(state.slot .. "\n");
 	
 	file:close();
 end
@@ -994,6 +1030,7 @@ function readState()
 		elseif i == 10 then state.mineZ = line;
 		elseif i == 11 then state.treesPlanted = line;
 		elseif i == 12 then state.extraLogsToKeep = line;
+		elseif i == 13 then select(line); -- state.slot
 		else error("Prey state file overflow!");
 		end
 		
@@ -1033,6 +1070,8 @@ state = {
 	y = 0,
 	z = 0,
 	face = 0,
+	
+	slot = 1,
 	
 	home = {
 		x = 0,
