@@ -473,6 +473,10 @@ function findIron()
 	state.mine.idx = state.mine.idx + 1;
 end
 
+--[[
+	Task:
+		Farm trees to get enough fuel then restart previous task
+--]]
 function refuelWithTrees()
 	while turtle.getFuelLevel() < 250 do
 		farmTrees();
@@ -480,19 +484,6 @@ function refuelWithTrees()
 	
 	-- Continue with previous task
 	state.task = state.task - 2;
-end
-
-function clearFullSlotsPast(pSlot)
-	local oldSlot = state.slot;
-	if turtle.getItemCount(14) > 0 then
-		for i=pSlot,16 do
-			if turtle.getItemCount(i) >= 64 then
-				turtle.select(i);
-				turtle.drop();
-			end
-		end
-	end
-	turtle.select(oldSlot);
 end
 
 --[[
@@ -558,7 +549,7 @@ turtle.back = function()
 end
 
 turtle.forward = function()
-	while turtle.getFuelLevel() < 1 do turtle.refuel(true); end
+	ensureFueled();
 
 	while not oldTurtle.forward() do
 		-- Try to mine, if can't mine hit something unmineable (bedrock)
@@ -579,7 +570,7 @@ turtle.forward = function()
 end
 	
 turtle.up = function()
-	while turtle.getFuelLevel() < 1 do turtle.refuel(true); end
+	ensureFueled();
 
 	while not oldTurtle.up() do
 		-- Try to mine, if can't mine hit something unmineable (bedrock)
@@ -595,7 +586,7 @@ turtle.up = function()
 end
 
 turtle.down = function()
-	while turtle.getFuelLevel() < 1 do turtle.refuel(true); end
+	ensureFueled();
 
 	while not oldTurtle.down() do
 		-- Try to mine, if can't mine hit something unmineable (bedrock)
@@ -833,6 +824,19 @@ end
     Common Functions
 --]]
 
+function clearFullSlotsPast(pSlot)
+	local oldSlot = state.slot;
+	if turtle.getItemCount(14) > 0 then
+		for i=pSlot,16 do
+			if turtle.getItemCount(i) >= 64 then
+				turtle.select(i);
+				turtle.drop();
+			end
+		end
+	end
+	turtle.select(oldSlot);
+end
+
 function digToBedrock()
     while not turtle.detectDown() or turtle.digDown() do
         turtle.down();
@@ -891,6 +895,15 @@ function refuelWithSticks()
 		end
 	end
 	turtle.face(startFace);	
+end
+
+function ensureFueled() 
+	while turtle.getFuelLevel() < 1 do 
+		local oldSlot = state.slot;
+		turtle.select(1);
+		turtle.refuel(); 
+		turtle.select(oldSlot);
+	end
 end
 
 function placeSapling()
