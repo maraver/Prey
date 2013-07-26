@@ -584,12 +584,15 @@ function setHomeToHere()
     state.home.z = state.z;
 end
 
-function printStatus()
+oldPrint = print;
+function printStatus(var)
+	oldPrint(var);
+
 	local x,y = term.getCursorPos();
 	term.setCursorPos(1, 1);
 	term.clearLine();	
-	print("Prey v" .. VER .. "   Task: " .. state.task .. "   Fuel: " .. turtle.getFuelLevel());
-	print("-----------------------------------------------");
+	write("Prey v" .. VER .. "   Task: " .. state.task .. "   Fuel: " .. turtle.getFuelLevel() .. "\n");
+	write("-----------------------------------------------\n");
 	term.setCursorPos(x, y);
 end
 
