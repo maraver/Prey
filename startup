@@ -445,16 +445,20 @@ function farmTrees()
 	end
 	
 	turtle.refuel(true, turtle.getItemCount(LOG) - 1);
-	
-	-- setup for findSaplings
-	turtle.goto(state.home.x + 6, state.home.y, state.home.z);
-	turtle.face(SOUTH);
-	
-	-- Wait
-	print(" - Waiting 3 minutes for saplings...");
-	os.sleep(180);
-	
-	findSaplings(2);
+
+	if turtle.getItemCount(SAPLINGS) < 4 then
+		-- setup for findSaplings
+		turtle.goto(state.home.x + 6, state.home.y, state.home.z);
+		turtle.face(SOUTH);
+		
+		-- Wait
+		print(" - Waiting 3 minutes for saplings...");
+		os.sleep(180);
+		
+		findSaplings(2);
+	else
+		print(" - Skip get saplings, have enough");
+	end
 	
 	-- Reset sapling for farming
 	plantTrees();
@@ -984,7 +988,7 @@ print = function(var)
 	term.setCursorPos(1, 1);
 	term.clearLine();	
 	write("Task: " .. state.task .. "   Fuel: " .. turtle.getFuelLevel() .. "   Loc: " .. state.x .. "," .. state.y .. "," .. state.z .. "\n");
-	write("-- PREY v" .. VER .. " ");
+	write("--Prey v" .. VER);
 	for i=term.getCursorPos(), term.getSize() do write("-"); end
 	term.setCursorPos(x, y);
 end
