@@ -38,13 +38,7 @@ function findFirstTree()
             	local areBranches = cutTree(1, 2, true);
             	if areBranches then error("This tree is too big!"); end
             	
-            	-- Refuel with sticks
-                turtle.placeUp(); -- Save wood
-            	turtle.craft();     -- Planks
-            	turtle.transferTo(5, turtle.getItemCount(1) / 2);
-            	turtle.craft();     -- Sticks
-            	turtle.refuel(true, 64);
-            	turtle.digUp();   -- Recover wood
+				refuelWithSticks();
 				
 				setFound(LOG);
             	return;
@@ -61,6 +55,20 @@ end
 
 --[[
     Second Task:
+        find dirt
+--]]
+function findDirt()
+    turtle.goHome();
+    turtle.removeUnwanted(DIRT);
+    turtle.select(DIRT);    
+	
+    turtle.digDown();
+	
+	setFound(DIRT);
+end
+
+--[[
+    Third Task:
 		find more near by trees
 --]]
 function findMoreTrees()
@@ -69,6 +77,7 @@ function findMoreTrees()
 	local oldCount = turtle.getItemCount(1);
 	
 	-- loop
+	local overflow = 2;
 	for sideLng = 1, 10 do
 		for corners = 0, 1 do
 			for xz = 1, sideLng do
@@ -79,21 +88,23 @@ function findMoreTrees()
 					
 					if turtle.getItemCount(1) > oldCount or turtle.compareDown() or turtle.compareUp() then
 						-- If close check for branches
-						local areBranches = cutTree(1, 2, sideLng <= 4);
+						local areBranches = cutTree(1, overflow, sideLng <= 4);
 						if areBranches then error("This tree is too big!"); end
 						
 						refuelWithSticks();
 						oldCount = turtle.getItemCount(1);
-					elseif turtle.getItemCount(2) > 0 then                
-						turtle.select(2);
+					elseif turtle.getItemCount(overflow) > 0 then                
+						turtle.select(overflow);
 						-- Check is an unknown tree, if is cut it down using it all as fuel
 						if (turtle.compareUp() or turtle.compareDown()) and turtle.refuel(true) then
-							cutTree(2, 3);
+							cutTree(overflow, overflow+1);
+							turtle.clearSlot(overflow);
+						elseif doSaplingCheck() then
+							overflow = overflow + 1;
 						elseif state.y <= state.home.y + MAX_AVOID and turtle.dig() and turtle.place() then
 							turtle.up();
+							turtle.clearSlot(overflow);
 						end
-						
-						turtle.clearSlot(2);
 					elseif sideLng >= 10 then -- only need to check on last side
 						-- Dug with no drop (leaves). Check for tree
 						local startFace = state.face;
@@ -106,7 +117,7 @@ function findMoreTrees()
 								local oldX, oldZ = state.x, state.z;
 								turtle.forward();
 								
-								cutTree(1, 2);
+								cutTree(1, overflow);
 								refuelWithSticks();
 								oldCount = turtle.getItemCount(1);
 								
@@ -135,25 +146,11 @@ function findMoreTrees()
 end
 
 --[[
-    Third Task:
-        find dirt
---]]
-function findDirt()
-    turtle.goHome();
-    turtle.removeUnwanted(DIRT);
-    turtle.select(DIRT);    
-	
-    turtle.digDown();
-	
-	setFound(DIRT);
-end
-
---[[
 	Fourth Task:
 		collect sapplings from first tree
 --]]
 function findSaplings(pRadius)
-	if pRadius == nil then pRadius = 3 end
+	if pRadius == nil then pRadius = 2 end
 	assert(type(pRadius) == "number");
 	assert(pRadius > 0 and pRadius <= 3);
 
@@ -173,7 +170,21 @@ function findSaplings(pRadius)
 	turtle.suckUp();
 	
     for i=1, (pRadius*2)*4 - 2 do -- can skip last 2
-		doSaplingCheck();
+		for face=1, 4 do			
+			if turtle.detect() then 
+				turtle.dig(); 
+				if not hasFound(SAPLING) then
+					turtle.freeSlot(SAPLING, SAPLING + 2);
+				end
+			end
+			
+			-- If picked up something and hasn't found sapling
+			if (turtle.suck() or turtle.suckDown()) and not hasFound(SAPLING) then 
+				doSaplingCheck();
+			end
+			
+			turtle.turnRight();
+		end
        
 		turtle.forward();
 	   
@@ -181,15 +192,31 @@ function findSaplings(pRadius)
 			turtle.turnRight();
 		end
         
-        turtle.select(SAPLING);
         if not hasFound(SAPLING) then
 			turtle.freeSlot(SAPLING, SAPLING + 2);
         end
+		turtle.select(SAPLING);
     end
 	
 	if pRadius > 2 then
 		turtle.goto(state.x - pRadius, state.y, state.z + pRadius);
-		doSaplingCheck();
+		
+		-- Sapling check
+		for face=1, 4 do			
+			if turtle.detect() then 
+				turtle.dig(); 
+				if not hasFound(SAPLING) then
+					turtle.freeSlot(SAPLING, SAPLING + 2);
+				end
+			end
+			
+			-- If picked up something and hasn't found sapling
+			if (turtle.suck() or turtle.suckDown()) and not hasFound(SAPLING) then 
+				doSaplingCheck();
+			end
+			
+			turtle.turnRight();
+		end
 	end
 end
 
@@ -674,38 +701,30 @@ end
 --[[
 	Checks
 --]]
+
+-- RETURNS true if found saplings on this check
 function doSaplingCheck()
-	for face=1, 4 do			
-		if turtle.detect() then 
-			turtle.dig(); 
-			if not hasFound(SAPLING) then
-				turtle.freeSlot(SAPLING, SAPLING + 2);
-			end
-		end
+	local foundHere = false;
+
+	-- Make check area
+	turtle.up();
+	turtle.select(DIRT);
+	turtle.placeDown();
+	turtle.up();
+	if turtle.detectUp() then turtle.digUp(); end
+	
+	turtle.select(SAPLING);
+	if not turtle.placeUp() and turtle.placeDown() then
+		turtle.digDown();
 		
-		-- If picked up something and hasn't found sapling
-		if (turtle.suck() or turtle.suckDown()) and not hasFound(SAPLING) then 
-			-- Make check area
-			turtle.up();
-			turtle.select(DIRT);
-			turtle.placeDown();
-			turtle.up();
-			if turtle.detectUp() then turtle.digUp(); end
-			
-			turtle.select(SAPLING);
-			if not turtle.placeUp() and turtle.placeDown() then
-				turtle.digDown();
-				
-				setFound(SAPLING);
-			end
-			
-			turtle.down();
-			turtle.select(DIRT);
-			turtle.down();
-		end
-		
-		turtle.turnRight();
+		setFound(SAPLING);
+		foundHere = true;
 	end
+	
+	turtle.down();
+	turtle.select(DIRT);
+	turtle.down();
+	return foundHere;
 end
 
 --[[
@@ -729,16 +748,24 @@ function refuelWithCoal()
 	end
 end
 
--- Only works if just has logs
+-- Only works if just has logs and dirt
 function refuelWithSticks()
-    turtle.select(LOG); -- Save a log
-    turtle.digUp();
+    turtle.select(LOG);  -- Save a log
+    if turtle.detectUp() then turtle.digUp(); end
     turtle.placeUp();
+	
+	turtle.select(DIRT); -- Save dirt
+	if turtle.detectDown() then turtle.digDown(); end
+	turtle.placeDown();
+	
+	turtle.removeUnwanted(DIRT); -- Remove extra
+	
 	turtle.craft();   -- Planks
 	turtle.transferTo(5, turtle.getItemCount(1) / 2);
 	turtle.craft();   -- Sticks
 	turtle.refuel(true, 64);
     turtle.digUp();   -- Recover log
+	turtle.digDown(); -- Reconver dirt
 end
 
 function waitThenCutTree()
@@ -849,7 +876,7 @@ end
 function setFound(id)
 	assert(type(id) == "number");
 	
-	print(" - Found " .. id);
+	print(" - Found item #" .. id);
 	foundItems[id] = true;
 end
 
@@ -945,7 +972,7 @@ state = {
 foundItems = { };
 
 tasks = {
-	findFirstTree, findMoreTrees, findDirt, findSaplings, findCobblestone, checkForCoal, buildBaseA, plantTrees, farmTrees, findIron, farmTrees
+	findFirstTree, findDirt, findMoreTrees, findSaplings, findCobblestone, checkForCoal, buildBaseA, plantTrees, farmTrees, findIron, farmTrees
 };
 
 ---------------------
