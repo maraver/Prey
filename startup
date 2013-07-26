@@ -36,7 +36,7 @@ function findFirstTree()
             	
             	-- Get rest of the wood
             	local areBranches = cutTree(1, 2, true);
-            	if areBranches then error("This tree is too big!"); end
+            	if areBranches then turtle.panic("This tree is too big!"); end
             	
 				refuelWithSticks();
 				
@@ -89,7 +89,7 @@ function findMoreTrees()
 					if turtle.getItemCount(1) > oldCount or turtle.compareDown() or turtle.compareUp() then
 						-- If close check for branches
 						local areBranches = cutTree(1, 3, sideLng <= 4);
-						if areBranches then error("This tree is too big!"); end
+						if areBranches then turtle.panic("This tree is too big!"); end
 						
 						refuelWithSticks();
 						oldCount = turtle.getItemCount(1);
@@ -504,23 +504,25 @@ oldTurtle = {
 };
 
 turtle.select = function(pSlot)
-	oldTurtle.select();
+	assert(type(pSlot) == "number");
+
 	state.slot = pSlot;
+	return oldTurtle.select(pSlot);
 end
 
 turtle.dig = function()
-	oldTurtle.dig();
 	clearFullSlotsPast(7);
+	return oldTurtle.dig();
 end
 
 turtle.digUp = function()
-	oldTurtle.digUp();
 	clearFullSlotsPast(7);
+	return oldTurtle.digUp();
 end
 
 turtle.digDown = function()
-	oldTurtle.digDown();
 	clearFullSlotsPast(7);
+	return oldTurtle.digDown();
 end
 
 turtle.refuel = function(pForce, pAmount)	
@@ -745,6 +747,26 @@ turtle.removeUnwanted = function(pStartIdx)
 		turtle.refuel(true, 64);
 		turtle.drop();
 	end
+end
+
+turtle.panic = function(pText)
+	for i=1,16 do
+		turtle.select(i);
+		if turtle.getItemCount(i) >= 6 then
+			break;
+		end
+	end
+	
+	if turtle.detectUp() then turtle.digUp(); end
+	turtle.placeUp();
+	if turtle.detectDown() then turtle.digDown(); end
+	turtle.placeDown();
+	for i=1,4 do
+		if turtle.detect() then turtle.dig(); end
+		turtle.place();
+		turtle.turnRight();
+	end
+	error("[PANIC] " .. pText);
 end
 
 ----------------------------------------------------------------------
