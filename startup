@@ -370,34 +370,36 @@ function plantTrees()
 	placeSapling();
 	if turtle.getItemCount(SAPLING) <= 0 then return; end
 	
-	-- (1,1) Sapling
-	turtle.face(EAST);
-	turtle.forward();
-	turtle.forward();
-	turtle.face(SOUTH);
-	placeSapling();
-	if turtle.getItemCount(SAPLING) <= 0 then return; end
-	
-	-- (1,5) Sapling
-	turtle.face(NORTH);
-	turtle.forward();
-	turtle.forward();
-	placeSapling();
-	if turtle.getItemCount(SAPLING) <= 0 then return; end
-	
-	-- (5, 5) Sapling
-	turtle.face(WEST);
-	for i=1,4 do turtle.forward(); end
-	turtle.face(NORTH);
-	placeSapling();
-	if turtle.getItemCount(SAPLING) <= 0 then return; end
-	
-	-- (5, 1) Sapling
-	turtle.face(SOUTH);
-	turtle.forward();
-	turtle.forward();
-	placeSapling();
-	if turtle.getItemCount(SAPLING) <= 0 then return; end
+	--[[
+		-- (1,1) Sapling
+		turtle.face(EAST);
+		turtle.forward();
+		turtle.forward();
+		turtle.face(SOUTH);
+		placeSapling();
+		if turtle.getItemCount(SAPLING) <= 0 then return; end
+		
+		-- (1,5) Sapling
+		turtle.face(NORTH);
+		turtle.forward();
+		turtle.forward();
+		placeSapling();
+		if turtle.getItemCount(SAPLING) <= 0 then return; end
+		
+		-- (5, 5) Sapling
+		turtle.face(WEST);
+		for i=1,4 do turtle.forward(); end
+		turtle.face(NORTH);
+		placeSapling();
+		if turtle.getItemCount(SAPLING) <= 0 then return; end
+		
+		-- (5, 1) Sapling
+		turtle.face(SOUTH);
+		turtle.forward();
+		turtle.forward();
+		placeSapling();
+		if turtle.getItemCount(SAPLING) <= 0 then return; end
+	--]]
 end
 
 function farmTrees()
