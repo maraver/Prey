@@ -84,7 +84,7 @@ function findMoreTrees()
 			for xz = 1, sideLng do
 				turtle.select(LOG);
 				
-				if turtle.dig() then
+				if turtle.dig() or turtle.detect() then
 					turtle.forward();
 					
 					if turtle.getItemCount(1) > oldCount or turtle.compareDown() or turtle.compareUp() then
@@ -206,7 +206,7 @@ function findSaplings(pRadius)
 	if pRadius == nil then pRadius = 2 end
 	assert(type(pRadius) == "number");
 	assert(pRadius > 0 and pRadius <= 3);
-
+	
 	if not hasFound(SAPLING) then
 		-- Go north and west
 		turtle.goto(state.x + pRadius, state.y, state.z - pRadius);
@@ -215,9 +215,12 @@ function findSaplings(pRadius)
 		turtle.freeSlot(SAPLING, 12);
 	end
     
+	print(" - Waiting 10 seconds for saplings...");
+	os.sleep(10);
+	
 	turtle.select(SAPLING);
 	
-    for i=1, (pRadius*2)*4 - 2 do -- can skip last 2
+    for i=1, (pRadius*2)*4 do
 		searchAndCheckSaplings();
        
 		turtle.forward();
