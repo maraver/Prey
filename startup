@@ -408,7 +408,7 @@ function findIron()
 	turtle.select(1);
 
     -- Ore commong from (30-40)
-    turtle.goto(state.home.x - 1, 35, state.home.z); -- 35?
+    turtle.goto(state.home.x - state.mine.idx, state.mine.y - 1, state.home.z);
 	turtle.face(NORTH);
 	
 	local posX = true;
@@ -464,8 +464,9 @@ function findIron()
 		end
 	end
 	
-	state.mineX = state.x;
-	state.mineZ = state.z;
+	-- Update mine status
+	state.mine.y = state.y;
+	state.mine.idx = state.mine.idx + 1;
 end
 
 function refuelWithTrees()
@@ -999,8 +1000,8 @@ function saveState()
 	file:write(state.home.z .. "\n");
 	file:write(state.home.face .. "\n");
 	file:write(state.task .. "\n");
-	file:write(state.mineX .. "\n");
-	file:write(state.mineZ .. "\n");
+	file:write(state.mine.y .. "\n");
+	file:write(state.mine.idx .. "\n");
 	file:write(state.treesPlanted .. "\n");
 	file:write(state.extraLogsToKeep .. "\n");
 	file:write(state.slot .. "\n");
@@ -1026,8 +1027,8 @@ function readState()
 		elseif i == 6  then state.home.z = line;
 		elseif i == 7  then state.home.face = line;
 		elseif i == 8  then state.task = line;
-		elseif i == 9  then state.mineX = line;
-		elseif i == 10 then state.mineZ = line;
+		elseif i == 9  then state.mine.y = line;
+		elseif i == 10 then state.mine.idx = line;
 		elseif i == 11 then state.treesPlanted = line;
 		elseif i == 12 then state.extraLogsToKeep = line;
 		elseif i == 13 then select(line); -- state.slot
@@ -1080,11 +1081,13 @@ state = {
 		face = 0
 	},
 	
-	treesPlanted = 0,
-	extraLogsToKeep = 0,
+	mine = {
+		y = 36,
+		idx = 1
+	},
 	
-	mineX = 0,
-	mineZ = 0
+	treesPlanted = 0,
+	extraLogsToKeep = 0
 };
 
 foundItems = { };
