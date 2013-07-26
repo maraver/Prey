@@ -557,7 +557,7 @@ turtle.back = function()
 end
 
 turtle.forward = function()
-	while turtle.getFuelLevel() < 1 do turtle.refuel(); end
+	while turtle.getFuelLevel() < 1 do turtle.refuel(true); end
 
 	while not oldTurtle.forward() do
 		-- Try to mine, if can't mine hit something unmineable (bedrock)
@@ -578,7 +578,7 @@ turtle.forward = function()
 end
 	
 turtle.up = function()
-	while turtle.getFuelLevel() < 1 do turtle.refuel(); end
+	while turtle.getFuelLevel() < 1 do turtle.refuel(true); end
 
 	while not oldTurtle.up() do
 		-- Try to mine, if can't mine hit something unmineable (bedrock)
@@ -594,7 +594,7 @@ turtle.up = function()
 end
 
 turtle.down = function()
-	while turtle.getFuelLevel() < 1 do turtle.refuel(); end
+	while turtle.getFuelLevel() < 1 do turtle.refuel(true); end
 
 	while not oldTurtle.down() do
 		-- Try to mine, if can't mine hit something unmineable (bedrock)
