@@ -228,11 +228,9 @@ function findSaplings(pRadius)
 		turtle.select(SAPLING);
     end
 	
-	-- If needed check around center
-	if pRadius > 2 then
-		turtle.goto(state.x - pRadius, state.y, state.z + pRadius);
-		searchAndCheckSaplings();
-	end
+	-- Check around center
+	turtle.goto(state.x - pRadius, state.y, state.z + pRadius);
+	searchAndCheckSaplings();
 end
 
 --[[
@@ -371,37 +369,6 @@ function plantTrees()
 	turtle.face(NORTH);
 	placeSapling();
 	if turtle.getItemCount(SAPLING) <= 0 then return; end
-	
-	--[[
-		-- (1,1) Sapling
-		turtle.face(EAST);
-		turtle.forward();
-		turtle.forward();
-		turtle.face(SOUTH);
-		placeSapling();
-		if turtle.getItemCount(SAPLING) <= 0 then return; end
-		
-		-- (1,5) Sapling
-		turtle.face(NORTH);
-		turtle.forward();
-		turtle.forward();
-		placeSapling();
-		if turtle.getItemCount(SAPLING) <= 0 then return; end
-		
-		-- (5, 5) Sapling
-		turtle.face(WEST);
-		for i=1,4 do turtle.forward(); end
-		turtle.face(NORTH);
-		placeSapling();
-		if turtle.getItemCount(SAPLING) <= 0 then return; end
-		
-		-- (5, 1) Sapling
-		turtle.face(SOUTH);
-		turtle.forward();
-		turtle.forward();
-		placeSapling();
-		if turtle.getItemCount(SAPLING) <= 0 then return; end
-	--]]
 end
 
 function farmTrees()
@@ -413,40 +380,9 @@ function farmTrees()
 	turtle.face(NORTH);
 	waitThenCutTree();
 	
-	-- Tree (1,1)
-	if state.treesPlanted > 0 then
-		turtle.face(EAST);
-		turtle.forward();
-		turtle.forward();
-		turtle.face(SOUTH);
-		waitThenCutTree();
-	end
-	
-	-- Tree (1,5)
-	if state.treesPlanted > 0 then
-		turtle.face(NORTH);
-		for i=1,3 do turtle.forward(); end
-		turtle.goto(state.x + 3, state.y, state.z);
-		waitThenCutTree();
-	end
-	
-	-- Tree (5,5)
-	if state.treesPlanted > 0 then
-		turtle.face(WEST);
-		for i=1,3 do turtle.forward(); end
-		waitThenCutTree();
-	end
-	
-	-- Tree (5, 1)
-	if state.treesPlanted > 0 then
-		turtle.face(SOUTH);
-		for i=1,3 do turtle.forward(); end
-		waitThenCutTree();
-	end
-	
 	turtle.refuel(true, turtle.getItemCount(LOG) - 1);
 
-	if turtle.getItemCount(SAPLINGS) < 4 then
+	if turtle.getItemCount(SAPLING) < 4 then
 		-- setup for findSaplings
 		turtle.goto(state.home.x + 6, state.home.y, state.home.z);
 		turtle.face(SOUTH);
