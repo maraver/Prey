@@ -508,50 +508,6 @@ end
     Common Functions
 --]]
 
-function saveState()
-	fs.delete("prey");
-	local file = io.open("prey", "w");
-	
-	file:write(state.x .. "\n");
-	file:write(state.y .. "\n");
-	file:write(state.z .. "\n");
-	file:write(state.face .. "\n");
-	file:write(state.home.x .. "\n");
-	file:write(state.home.y .. "\n");
-	file:write(state.home.z .. "\n");
-	file:write(state.home.face .. "\n");
-	file:write(state.task .. "\n");
-	
-	file:close();
-end
-
-function readState()
-	if not fs.exists("prey") then return; end
-
-	local file = io.open("prey");
-
-	local i = 0;
-	for line in file:lines() do
-		line = tonumber(line);
-		
-		if i == 0 then state.x = line;
-		elseif i == 1 then state.y = line;
-		elseif i == 2 then state.z = line;
-		elseif i == 3 then state.face = line;
-		elseif i == 4 then state.home.x = line;
-		elseif i == 5 then state.home.y = line;
-		elseif i == 6 then state.home.z = line;
-		elseif i == 7 then state.home.face = line;
-		elseif i == 8 then state.task = line;
-		else error("Prey state file overflow!");
-		end
-		
-		i = i + 1;
-	end
-	
-	file:close();
-end
-
 function digToBedrock()
     while not turtle.detectDown() or turtle.digDown() do
         turtle.down();
@@ -630,6 +586,60 @@ function setHomeToHere()
     state.home.x = state.x;
     state.home.y = state.y;
     state.home.z = state.z;
+end
+
+function printStatus()
+	local x,y = term.getCursorPos();
+	term.setCursorPos(1, 1);
+	term.clearLine();	
+	print("Task: " .. status.task .. "   Fuel: " .. turtle.getFuelLevel());
+	term.setCursorPos(x, y);
+end
+
+function saveState()
+	printStatus();
+
+	fs.delete("prey");
+	local file = io.open("prey", "w");
+	
+	file:write(state.x .. "\n");
+	file:write(state.y .. "\n");
+	file:write(state.z .. "\n");
+	file:write(state.face .. "\n");
+	file:write(state.home.x .. "\n");
+	file:write(state.home.y .. "\n");
+	file:write(state.home.z .. "\n");
+	file:write(state.home.face .. "\n");
+	file:write(state.task .. "\n");
+	
+	file:close();
+end
+
+function readState()
+	if not fs.exists("prey") then return; end
+
+	local file = io.open("prey");
+
+	local i = 0;
+	for line in file:lines() do
+		line = tonumber(line);
+		
+		if i == 0 then state.x = line;
+		elseif i == 1 then state.y = line;
+		elseif i == 2 then state.z = line;
+		elseif i == 3 then state.face = line;
+		elseif i == 4 then state.home.x = line;
+		elseif i == 5 then state.home.y = line;
+		elseif i == 6 then state.home.z = line;
+		elseif i == 7 then state.home.face = line;
+		elseif i == 8 then state.task = line;
+		else error("Prey state file overflow!");
+		end
+		
+		i = i + 1;
+	end
+	
+	file:close();
 end
 
 function copyStartup()
