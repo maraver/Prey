@@ -77,7 +77,7 @@ function findMoreTrees()
 	local oldCount = turtle.getItemCount(1);
 	
 	-- loop
-	local overflow = 2;
+	local overflow = 3;
 	for sideLng = 1, 10 do
 		for corners = 0, 1 do
 			for xz = 1, sideLng do
@@ -703,7 +703,9 @@ end
 
 -- RETURNS true if found saplings on this check
 function doSaplingCheck()
-	local foundHere = false;
+	if hasFound(SAPLING) and turte.getItemCount(SAPLING) > 0 then
+		return false; -- Already found
+	end
 
 	-- Make check area
 	turtle.up();
@@ -717,13 +719,12 @@ function doSaplingCheck()
 		turtle.digDown();
 		
 		setFound(SAPLING);
-		foundHere = true;
 	end
 	
 	turtle.down();
 	turtle.select(DIRT);
 	turtle.down();
-	return foundHere;
+	return true;
 end
 
 --[[
@@ -757,7 +758,7 @@ function refuelWithSticks()
 	if turtle.detectDown() then turtle.digDown(); end
 	turtle.placeDown();
 	
-	turtle.removeUnwanted(DIRT); -- Remove extra
+	turtle.removeUnwanted(DIRT + 1); -- Remove extra
 	
 	turtle.select(LOG); -- Planks
 	turtle.craft();   
@@ -878,7 +879,11 @@ end
 function setFound(id)
 	assert(type(id) == "number");
 	
-	print(" - Found item #" .. id);
+	if not hasFound(id) then
+		print(" - Found item #" .. id);
+	else
+		print(" - Rediscovered item #" .. id);
+	end
 	foundItems[id] = true;
 end
 
