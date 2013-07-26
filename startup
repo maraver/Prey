@@ -7,6 +7,9 @@ NORTH, EAST, SOUTH, WEST = 0, 1, 2, 3;
 -- Change with caution
 LOG, DIRT, SAPLING, COBBLE, COAL = 1, 2, 3, 4, 5;
 
+-- Maximum amount to go up to avoid the ground
+MAX_AVOID = 4;
+
 ----------------------------------------------------------------------
 -- Tasks
 ----------------------------------------------------------------------
@@ -84,7 +87,7 @@ function findMoreTrees()
 						-- Check is an unknown tree, if is cut it down using it all as fuel
 						if (turtle.compareUp() or turtle.compareDown()) and turtle.refuel(true) then
 							cutTree(2, 3);
-						elseif state.y < state.home.y + 5 and turtle.dig() and turtle.place() then
+						elseif state.y <= state.home.y + MAX_AVOID and turtle.dig() and turtle.place() then
 							turtle.up();
 						end
 						
