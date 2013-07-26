@@ -633,10 +633,17 @@ turtle.goto = function(pX, pY, pZ, pFace)
 	elseif state.y == state.home.y then
 		turtle.up();
 	end
-	
-	if ((state.y > state.home.y and pY <= state.home.y) or (state.y < state.home.y and pY >= state.home.y))
-			and (pX ~= state.home.x or pY ~= state.home.y or pZ ~= state.home.z) then
-		turtle.goHome();
+
+	if pX ~= state.home.x or pY ~= state.home.y or pZ ~= state.home.z then
+		if state.y > state.home.y and pY <= state.home.y then
+			turtle.goHome();
+			
+			while state.y >= state.home.y - 1 do turtle.down(); end
+		elseif (state.y < state.home.y and pY >= state.home.y) then
+			turtle.goHome();
+			
+			while state.y >= state.home.y - 1 do turtle.up(); end
+		end
 	end
 	
 	-- Correct x position
