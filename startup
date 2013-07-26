@@ -33,9 +33,7 @@ function findFirstTree()
             	
             	-- Get rest of the wood
             	local areBranches = cutTree(1, 2, true);
-            	if areBranches then
-            		error("This tree is too big!");
-            	end
+            	if areBranches then error("This tree is too big!"); end
             	
             	-- Refuel with sticks
                 turtle.placeUp(); -- Save wood
@@ -76,7 +74,10 @@ function findMoreTrees()
 					turtle.forward();
 					
 					if turtle.getItemCount(1) > oldCount or turtle.compareDown() then
-						cutTree(1, 2);
+						-- If close check for branches
+						local areBranches = cutTree(1, 2, sideLng < 3);
+						if areBranches then error("This tree is too big!"); end
+						
 						oldCount = turtle.getItemCount(1);
 					elseif turtle.getItemCount(2) > 0 then                
 						turtle.select(2);
@@ -100,7 +101,7 @@ function findMoreTrees()
 								local oldX, oldZ = state.x, state.z;
 								turtle.forward();
 								
-								cutTree(1,2);
+								cutTree(1, 2);
 								oldCount = turtle.getItemCount(1);
 								
 								turtle.goto(oldX, state.y, oldZ);
@@ -318,12 +319,7 @@ turtle.refuel = function(pForce, pAmount)
 	if pForce or turtle.getFuelLevel() < 1 then
 		if pAmount == nil then pAmount = 1; end
 	
-		if oldTurtle.refuel(pAmount) then
-		    print(" - New fuel level " .. turtle.getFuelLevel());
-		    return true;
-        else
-            return false;
-        end
+		return oldTurtle.refuel(pAmount);
 	else
 		return true;
 	end
@@ -592,7 +588,8 @@ function printStatus()
 	local x,y = term.getCursorPos();
 	term.setCursorPos(1, 1);
 	term.clearLine();	
-	print("Task: " .. status.task .. "   Fuel: " .. turtle.getFuelLevel());
+	print("Prey v" .. VER .. "   Task: " .. state.task .. "   Fuel: " .. turtle.getFuelLevel());
+	print("-----------------------------------------------");
 	term.setCursorPos(x, y);
 end
 
