@@ -163,6 +163,11 @@ function findSaplings()
     turtle.removeUnwanted(SAPLING);
 	turtle.select(SAPLING);
 	
+	-- Give saplings some more time
+	print("Waiting 30 seconds for saplings...");
+	os.sleep(30);
+	turtle.suckUp();
+	
     local found = false;
     for i=1, 14 do -- can skip last 2
 		turtle.forward();
@@ -196,8 +201,12 @@ function findSaplings()
         
         turtle.select(SAPLING);
         if not found then
-        	-- Keep sapling slot clean without dropping
-        	turtle.transferTo(SAPLING + 2);
+        	-- Clear sapling slot out of the way
+        	if not turtle.transferTo(SAPLING + 2) then
+				turtle.turnLeft();
+				turtle.drop();
+				turtle.turnRight();
+			end
         end
     end
 
@@ -205,10 +214,6 @@ function findSaplings()
 	turtle.select(SAPLING)
 	turtle.goHome();
 	turtle.suckDown();
-	if not found then
-		-- Keep sapling slot clean without dropping
-		turtle.transferTo(SAPLING + 2);
-	end
 end
 
 --[[
