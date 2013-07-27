@@ -128,10 +128,7 @@ function findMoreTrees()
 					-- Check unknown object
 					if turtle.getItemCount(3) > 0 then                
 						turtle.select(3);
-						-- Check is an unknown tree, if is cut it down using it all as fuel
-						if (turtle.compareUp() or turtle.compareDown()) and turtle.refuel(true) then
-							cutTree(1, 3);
-						elseif doSaplingCheck() then
+						if doSaplingCheck() then
 							foundItems[SAPLING] = false;
 						
 							local oldFace = state.face;
