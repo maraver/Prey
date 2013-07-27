@@ -214,7 +214,9 @@ function findSaplings(pRadius)
 	assert(type(pRadius) == "number");
 	assert(pRadius > 0 and pRadius <= 3);
 	
+	local moved = false;
 	if not hasFound(SAPLING) then
+		moved = true;
 		-- Go north and west
 		turtle.goto(state.x + pRadius, state.y, state.z - pRadius);
 		turtle.face(EAST);
@@ -239,9 +241,11 @@ function findSaplings(pRadius)
 		turtle.select(SAPLING);
     end
 	
-	-- Check around center
-	turtle.goto(state.x - pRadius, state.y, state.z + pRadius);
-	searchAndCheckSaplings();
+	-- Check center if center set by this function
+	if moved then
+		turtle.goto(state.x - pRadius, state.y, state.z + pRadius);
+		searchAndCheckSaplings();
+	end
 end
 
 --[[
