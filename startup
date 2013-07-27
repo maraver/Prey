@@ -271,21 +271,7 @@ function findCobblestone()
     -- Get any saplings that may have been there
     turtle.suckUp();
     
-    -- Cobble must be one of first new blocks broken
-    local highSlot, highSlotCount = 4, turtle.getItemCount(4);
-    for slot = 5, 10 do
-        if turtle.getItemCount(slot) > highSlotCount then
-            highSlot = slot;
-        end
-    end
-    
-    -- Move cobblestone if needed
-    if highSlot ~= 4 then
-        turtle.freeSlot(4, 16);
-        turtle.freeSlot(highSlot, 4);
-    end
-	
-	setFound(COBBLE);
+    findHighSlotAsCobble();
 end
 
 --[[
@@ -402,10 +388,10 @@ function farmTrees()
 	waitThenCutTree();
 	
 	-- Refuel with sticks
-	storeInChest(LOG + 1);
+	storeInChest(LOG + 1, 16);
 	turtle.up(); -- Get away from chest
 	refuelWithSticks();
-	recoverFromChest(LOG + 1);
+	recoverFromChest(LOG + 1, 16);
 
 	-- Get saplings
 	if turtle.getItemCount(SAPLING) < 4 then
@@ -424,6 +410,34 @@ function farmTrees()
 	
 	-- Reset sapling for farming
 	plantTrees();
+end
+
+--[[
+	Task:
+		build a furnace
+--]]
+function buildFurnace()
+	storeInChest(LOG, COBBLE - 1);
+	storeInChest(COAL, 16);
+	
+	turtle.select(COBBLE);
+	turtle.transferTo(1, 1);
+	turtle.transferTo(2, 1);
+	turtle.transferTo(3, 1);
+	turtle.transferTo(5, 1);
+	turtle.transferTo(7, 1);
+	turtle.transferTo(9, 1);
+	turtle.transferTo(10, 1);
+	turtle.transferTo(11, 1);
+	
+	turtle.select(1);
+	turtle.craft(1);
+	
+	turtle.face(EAST);
+	turtle.place();
+	
+	recoverFromChest(LOG, COBBLE - 1);
+	recoverFromChest(COAL, 16);
 end
 
 --[[
@@ -447,13 +461,15 @@ function findBedrock()
     state.home.y = -state.y;
     state.y = 0;
 	
-	turtle.goto(state.x - state.mine.idx, state.y + 5, state.z);
+	turtle.goto(state.x, state.y + 5, state.z);
 	state.mine.idx = state.mine.idx + 1;
 	
 	turtle.goto(state.home.x - state.mine.idx, state.mine.y + 1, state.home.z);
 	
 	-- Clear everything to flush any gold which messes with iron
 	turtle.removeUnwanted(IRON);
+	
+	findHighSlotAsCobble();
 end
 
 --[[
@@ -825,6 +841,22 @@ end
 --[[
 	Checks
 --]]
+function findHighSlotAsCobble()
+    local highSlot, highSlotCount = 4, turtle.getItemCount(4);
+    for slot = 5, 15 do
+        if turtle.getItemCount(slot) > highSlotCount then
+            highSlot = slot;
+        end
+    end
+    
+    -- Move cobblestone if needed
+    if highSlot ~= 4 then
+        turtle.freeSlot(4, 16);
+        turtle.freeSlot(highSlot, 4);
+    end
+	
+	setFound(COBBLE);
+end
 
 function searchAndCheckSaplings()
 	for face=1, 4 do			
@@ -875,14 +907,14 @@ end
 --]]
 
 -- Stores everything from start slot onward in check
-function storeInChest(pStartSlot)
-	assert(type(pStartSlot) == "number" and pStartSlot <= 16);
+function storeInChest(pStartSlot, pEndSlot)
+	assert(type(pStartSlot) == "number" type(pEndSlot) == "number" and pStartSlot <= pEndSlot);
 	
 	turtle.goHome();
 	turtle.face(SOUTH);
 	
 	local oldSlot = state.slot;
-	for i=pStartSlot, 16 do
+	for i=pStartSlot, pEndSlot do
 		turtle.select(i);
 		turtle.drop();
 	end
@@ -890,14 +922,14 @@ function storeInChest(pStartSlot)
 end
 
 -- Recovers everything from chest storing in slots starting at pStartSlot
-function recoverFromChest(pStartSlot)
-	assert(type(pStartSlot) == "number" and pStartSlot <= 16);
+function recoverFromChest(pStartSlot, pEndSlot)
+	assert(type(pStartSlot) == "number" type(pEndSlot) == "number" and pStartSlot <= pEndSlot);
 	
 	turtle.goHome();
 	turtle.face(SOUTH);
 	
 	local oldSlot = state.slot;
-	for i=pStartSlot, 16 do
+	for i=pStartSlot, pEndSlot do
 		turtle.select(i);
 		turtle.suck();
 	end
@@ -1248,7 +1280,7 @@ foundItems = { };
 
 tasks = {
 	findFirstTree, findDirt, findMoreTrees, buildChest, findSaplings, findCobblestone, checkForCoal, 
-	buildBaseA, plantTrees, farmTrees, findBedrock, findIron, refuelWithTrees
+	buildBaseA, plantTrees, farmTrees, buildFurnace, findBedrock, findIron, refuelWithTrees
 };
 
 ---------------------
