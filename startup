@@ -1,7 +1,7 @@
 --[[
     Vars
 --]]
-VER = 0.7;
+VER = 0.8;
 NORTH, EAST, SOUTH, WEST = 0, 1, 2, 3;
 
 -- Change with caution
@@ -30,7 +30,10 @@ function findFirstTree()
             -- Check is wood
             if turtle.refuel() then
                 turtle.forward();
-                setHomeToHere();
+                
+				-- Set home to here
+				state.home.x = state.x;
+				state.home.z = state.z;
                 
                 -- Get second wood
             	turtle.up();
@@ -73,7 +76,7 @@ end
 		find more near by trees
 --]]
 function findMoreTrees()
-	turtle.goto(state.home.x, state.home.y + 3, state.home.z);
+	turtle.goto(state.home.x, state.home.y + 2, state.home.z);
 	
 	-- save some logs for making a chest
 	state.extraLogsToKeep = 2;
@@ -84,24 +87,23 @@ function findMoreTrees()
 		for edge = 0, 1 do
 			for xz = 1, sideLng do
 				turtle.select(LOG);
+				turtle.forward();
 				
-				if turtle.dig() or turtle.detect() then
-					turtle.forward();
+				if turtle.getItemCount(1) > oldCount or turtle.compareDown() or turtle.compareUp() then
+					-- If close check for branches
+					local areBranches = cutTree(1, 3, sideLng <= 4);
+					if areBranches then turtle.panic("This tree is too big!"); end
 					
-					if turtle.getItemCount(1) > oldCount or turtle.compareDown() or turtle.compareUp() then
-						-- If close check for branches
-						local areBranches = cutTree(1, 3, sideLng <= 4);
-						if areBranches then turtle.panic("This tree is too big!"); end
-						
-						refuelWithSticks();
-						oldCount = turtle.getItemCount(1);
-					else
-						local startFace = state.face;
-						
-						for i=1, 3 do
-							-- If in middle of a side don't need to check directly infront
-							if xz < sideLng then turtle.turnRight(); end
-						
+					refuelWithSticks();
+					oldCount = turtle.getItemCount(1);
+				else
+					local startFace = state.face;
+					
+					for i=1, 3 do
+						-- If in middle of a side don't need to check directly infront
+						if xz < sideLng then 
+							turtle.turnRight(); 
+						else
 							local treeSlot = findTreeSlot();
 							if treeSlot > 0 then
 								local oldX, oldZ = state.x, state.z;
@@ -112,6 +114,7 @@ function findMoreTrees()
 									refuelWithSticks();
 									oldCount = turtle.getItemCount(1);
 								else
+									-- Unknown tree
 									turtle.clearSlot(treeSlot);
 								end
 								
@@ -121,37 +124,36 @@ function findMoreTrees()
 								turtle.turnRight();
 							end
 						end
-						
-						turtle.face(startFace);
 					end
 					
-					-- Check unknown object
-					if turtle.getItemCount(3) > 0 then                
-						turtle.select(3);
-						if doSaplingCheck() then
-							foundItems[SAPLING] = false;
-						
-							local oldFace = state.face;
-							turtle.faceBlock(0, 0);
-							if turtle.detect() then turtle.dig(); end
-							turtle.select(SAPLING);
-							turtle.drop();
-							turtle.face(oldFace);
-						elseif state.y <= state.home.y + MAX_AVOID and turtle.dig() and turtle.place() then
-							turtle.up();
-						end
-						turtle.clearSlot(3);
+					turtle.face(startFace);
+				end
+				
+				-- Check unknown object
+				if turtle.getItemCount(3) > 0 then                
+					turtle.select(3);
+					if doSaplingCheck() then
+						foundItems[SAPLING] = false;
+					
+						local oldFace = state.face;
+						turtle.faceBlock(0, 0);
+						if turtle.detect() then turtle.dig(); end
+						turtle.select(SAPLING);
+						turtle.drop();
+						turtle.face(oldFace);
+					elseif state.y <= state.home.y + MAX_AVOID and turtle.dig() and turtle.place() then
+						turtle.up();
 					end
-				else
-					-- Always go forward, just don't need to do any checks
-					turtle.forward();
+					turtle.clearSlot(3);
 				end
 			end
 			turtle.turnRight();
 		end
 	end
     
-	refuelWithSticks();
+	if turtle.getItemCount(1) > 0 then
+		refuelWithSticks();
+	end
 end
 
 --[[
@@ -287,17 +289,18 @@ end
         using items from find cobblestone determine which is coal
 --]]
 function checkForCoal()    
-    -- Clear a space for placing
-    if turtle.detectUp() then 
-		turtle.digUp();
-	end
-    
+	-- Sapling check area
+	turtle.up();
+	turtle.select(DIRT);
+	turtle.placeDown();
+	turtle.up();
+
     for slot=COAL, 16 do
         turtle.select(slot);
         
         -- If can be placed not coal
-        if turtle.placeUp() then
-            turtle.digUp();
+        if turtle.placeDown() then
+            turtle.digDown();
         -- If can't be placed and can refuel is coal, make sure don't lose (check count)
         elseif turtle.getItemCount(slot) > 1 and turtle.refuel(true) then
             if slot ~= COAL then
@@ -311,8 +314,12 @@ function checkForCoal()
             break;
         end
     end
+	
+	turtle.select(1);
+	turtle.down();
+	turtle.down();
     
-	-- Remove extra because we went below 32 may have gotten goal
+	-- Remove extra because we went below 32 may have gotten gold
 	if hasFound(COAL) then
 		turtle.select(COAL);
 		turtle.refuel(true, turtle.getItemCount(5) - 1);
@@ -338,7 +345,7 @@ function buildBaseA()
 	for x=1,5 do
 		for z=1,5 do
 			if turtle.detectDown() then turtle.digDown(); end
-			if turtle.detectUp() then turtle.digup(); end
+			if turtle.detectUp() then turtle.digUp(); end
 			
 			if (x == 3 and z == 3) then -- or ((x == 1 or x == 5) and (z == 1 or z == 5))
 				turtle.select(DIRT);
@@ -346,9 +353,9 @@ function buildBaseA()
 			
 				-- Limiting top block
 				turtle.select(COBBLE);
-				for y=1, 7 do turtle.up(); end
+				for y=1, 5 do turtle.up(); end
 				turtle.placeUp();
-				for y=1, 7 do turtle.down(); end
+				for y=1, 5 do turtle.down(); end
 			else 
 				turtle.placeDown();
 			end
@@ -365,6 +372,8 @@ function buildBaseA()
 		turtle.forward();
 		turnFunc();
 	end
+	
+	turtle.select(1);
 end
 
 --[[
@@ -388,11 +397,16 @@ function farmTrees()
 	turtle.face(NORTH);
 	waitThenCutTree();
 	
-	turtle.refuel(true, turtle.getItemCount(LOG) - 1);
+	-- Refuel with sticks
+	storeInChest(LOG + 1);
+	turtle.up(); -- Get away from chest
+	refuelWithSticks();
+	recoverFromChest(LOG + 1);
 
+	-- Get saplings
 	if turtle.getItemCount(SAPLING) < 4 then
 		-- setup for findSaplings
-		turtle.goto(state.home.x + 6, state.home.y, state.home.z);
+		turtle.goto(state.home.x + 5, state.home.y, state.home.z);
 		turtle.face(SOUTH);
 		
 		-- Wait
@@ -419,6 +433,7 @@ function findBedrock()
 	end
 
 	turtle.goHome();
+	state.y = 0;
 
 	while not turtle.detectDown() or turtle.digDown() do
         turtle.down();
@@ -431,7 +446,7 @@ function findBedrock()
 	turtle.goto(state.x - state.mine.idx, state.y + 5, state.z);
 	state.mine.idx = state.mine.idx + 1;
 	
-	turtle.goto(state.home.x - state.mine.idx, state.mine.y - 1, state.home.z);
+	turtle.goto(state.home.x - state.mine.idx, state.mine.y + 1, state.home.z);
 	
 	-- Clear everything to flush any gold which messes with iron
 	turtle.removeUnwanted(IRON);
@@ -445,7 +460,7 @@ function findIron()
 	turtle.select(1);
 
     -- Ore from (35-45) to avoid gold
-    turtle.goto(state.home.x - state.mine.idx, state.mine.y - 1, state.home.z);
+    turtle.goto(state.home.x - state.mine.idx, state.mine.y, state.home.z);
 	turtle.face(NORTH);
 	
 	local posX = true;
@@ -478,7 +493,7 @@ function findIron()
 				elseif state.y > 35 and turtle.detectDown() then
 					turtle.down();
 				else
-					turtle.down();
+					turtle.up();
 				end
 			end
 		end
@@ -502,7 +517,7 @@ function findIron()
 	end
 	
 	-- Update mine status
-	state.mine.y = state.y;
+	state.mine.y = state.y + 1;
 	state.mine.idx = state.mine.idx + 1;
 end
 
@@ -687,7 +702,7 @@ turtle.face = function(pFace)
 	assert(pFace >= 0 and pFace <= 3, "Invalid direction " .. pFace);
 	
 	-- Handle rap-around
-	if (state.face < pFace and state.face + 4 - pFace < 2) or (state.face > pFace and pFace + 4 - state.face < 2) then
+	if (state.face < pFace and state.face + 4 - pFace > 2) or (state.face > pFace and pFace + 4 - state.face <= 2) then
 		while (pFace ~= state.face) do turtle.turnRight(); end
 	else
 		while (pFace ~= state.face) do turtle.turnLeft(); end
@@ -708,7 +723,7 @@ turtle.goto = function(pX, pY, pZ, pFace)
 			turtle.goHome();
 			
 			while state.y >= state.home.y - 1 and state.y > pY do turtle.down(); end
-		elseif (state.y < state.home.y and pY >= state.home.y) then
+		elseif state.y < state.home.y and pY >= state.home.y then
 			turtle.goHome();
 			
 			while state.y <= state.home.y - 1 and state.y < pY do turtle.up(); end
@@ -737,9 +752,7 @@ turtle.goto = function(pX, pY, pZ, pFace)
 	while state.y > pY do turtle.down(); end
 	while state.y < pY do turtle.up(); end
 	
-	if type(pFace) == "number" then
-		turtle.face(pFace);
-	end
+	if type(pFace) == "number" then turtle.face(pFace); end
 end
 
 turtle.goHome = function()
@@ -818,8 +831,8 @@ function searchAndCheckSaplings()
 			end
 		end
 		
-		-- If picked up something and hasn't found sapling
-		if (turtle.suck() or turtle.suckDown()) and not hasFound(SAPLING) then 
+		-- If picked up something
+		if (turtle.suck() or turtle.suckDown()) then 
 			doSaplingCheck();
 		end
 		
@@ -856,6 +869,37 @@ end
 --[[
     Common Functions
 --]]
+
+-- Stores everything from start slot onward in check
+function storeInChest(pStartSlot)
+	assert(type(pStartSlot) == "number" and pStartSlot <= 16);
+	
+	turtle.goHome();
+	turtle.face(SOUTH);
+	
+	local oldSlot = state.slot;
+	for i=pStartSlot, 16 do
+		turtle.select(i);
+		turtle.drop();
+	end
+	turtle.select(oldSlot);
+end
+
+-- Recovers everything from chest storing in slots starting at pStartSlot
+function recoverFromChest(pStartSlot)
+	assert(type(pStartSlot) == "number" and pStartSlot <= 16);
+	
+	turtle.goHome();
+	turtle.face(SOUTH);
+	
+	local oldSlot = state.slot;
+	for i=pStartSlot, 16 do
+		turtle.select(i);
+		turtle.suck();
+	end
+	turtle.select(oldSlot);
+end
+
 function getCount(pStart, pEnd)
 	assert(type(pStart) == "number" and type(pEnd) == "number" and pStart <= pEnd);
 	
@@ -871,7 +915,7 @@ function findDiff(pOldCount)
 	assert(type(pOldCount) == "table");
 	
 	for slot,count in ipairs(pOldCount) do
-		if count != turtle.getItemCount(slot) then
+		if count ~= turtle.getItemCount(slot) then
 			return slot;
 		end
 	end
@@ -888,10 +932,9 @@ function findTreeSlot()
 		local oldCount = getCount(3,8);
 		turtle.dig();
 		local diffSlot = findDiff(oldCount);
-		
 		if diffSlot > 0 then
 			turtle.select(diffSlot);
-			if turtle.refuel(true) then
+			if turtle.place() and turtle.dig() and turtle.refuel(true) then
 				return diffSlot;
 			end
 		end
@@ -1064,12 +1107,6 @@ function cutTree(pTargSlot, pOverflow, pCheckForBranches)
 	turtle.select(pTargSlot);
 	
 	return areBranches;
-end
-
-function setHomeToHere()
-    state.home.x = state.x;
-    state.home.y = state.y;
-    state.home.z = state.z;
 end
 
 oldPrint = print;
