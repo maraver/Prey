@@ -9,7 +9,7 @@ LOG, DIRT, SAPLING, COBBLE, COAL, IRON = 1, 2, 3, 4, 5, 6;
 
 -- Maximum amount to go up to avoid the ground
 MAX_AVOID = 4;
-HOME_HEIGHT = 3;
+HOME_HEIGHT = 6;
 
 ----------------------------------------------------------------------
 -- Tasks
@@ -189,6 +189,7 @@ function buildChest()
 	turtle.refuel(true, turtle.getItemCount(LOG) - 8);
 	
 	-- Get chest
+	turtle.transferTo(1, 1);
 	turtle.transferTo(2, 1);
 	turtle.transferTo(3, 1);
 	turtle.transferTo(5, 1);
@@ -422,7 +423,7 @@ end
 --]]
 function buildFurnace()
 	storeInChest(LOG, COBBLE - 1);
-	storeInChest(COAL, 16);
+	storeInChest(COBBLE + 1, 16);
 	
 	turtle.select(COBBLE);
 	turtle.transferTo(1, 1);
@@ -432,10 +433,16 @@ function buildFurnace()
 	turtle.transferTo(7, 1);
 	turtle.transferTo(9, 1);
 	turtle.transferTo(10, 1);
-	turtle.transferTo(11); -- Transfer rest
+	turtle.transferTo(11); -- Tansfer extra
 	
+	-- Make furnace
 	turtle.select(1);
 	turtle.craft(1);
+	
+	-- Move extra back to cobble
+	turtle.select(11);
+	turtle.transfterTo(COBBLE);
+	turtle.select(1);
 	
 	turtle.face(EAST);
 	
@@ -443,9 +450,10 @@ function buildFurnace()
 	turtle.place();
 	
 	turtle.removeUnwanted(1);
+	turtle.select(1);
 	
 	recoverFromChest(LOG, COBBLE - 1);
-	recoverFromChest(COAL, 16);
+	recoverFromChest(COBBLE + 1, 16);
 end
 
 --[[
@@ -460,6 +468,7 @@ function findBedrock()
 
 	turtle.goHome();
 	state.y = 0;
+	turtle.goto(state.home.x, -2, state.home.z + 1);
 
 	while not turtle.detectDown() or turtle.digDown() do
         turtle.down();
@@ -498,15 +507,15 @@ function findIron()
 		local turns = 0;
 		for i=1,16 do
 			if turtle.detect() then
-				turns = 0;
-				turtle.forward();
-				
 				-- Keep on track
+				turns = 0;
 				if posX then
 					turtle.face(NORTH);
 				else
 					turtle.face(SOUTH);
 				end
+			
+				turtle.forward();
 			elseif turns < 4 then
 				turns = turns + 1;
 				if posX then
@@ -535,8 +544,12 @@ function findIron()
 			turtle.forward();
 			turtle.face(NORTH);
 		end
-		
 		posX = not posX;
+		
+		if math.abs(state.z) >= 16 then
+			turtle.up();
+			turtle.goto(0, state.y, 0);
+		end
 		
 		if turtle.getFuelLevel() < 200 then
 			refuelWithCoal();
@@ -596,7 +609,9 @@ turtle.digDown = function()
 	return oldTurtle.digDown();
 end
 
-turtle.refuel = function(pForce, pAmount)	
+turtle.refuel = function(pForce, pAmount)
+	assert(type(pForce) == "boolean" and (pAmount == nil or type(pAmount) == "number"));
+
 	if pForce or turtle.getFuelLevel() < 1 then
 		if pAmount == nil then pAmount = 1; end
 	
@@ -1004,7 +1019,7 @@ end
 function refuelWithCoal()
 	if hasFound(COAL) then
 		turtle.select(COAL);
-		return turtle.refuel(turtle.getItemCount(COAL) - 1);
+		return turtle.refuel(true, turtle.getItemCount(COAL) - 1);
 	else
 		checkForCoal();
 		return hasFound(COAL);
@@ -1276,7 +1291,7 @@ state = {
 	},
 	
 	mine = {
-		y = 40,
+		y = 35,
 		idx = 1
 	},
 	
