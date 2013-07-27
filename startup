@@ -180,6 +180,10 @@ function buildChest()
 	turtle.removeUnwanted(LOG + 1);
 	turtle.select(LOG);
 	
+	if turtle.getItemCount(LOG) < 2 then
+		error("Not enough logs to make a chest!");
+	end
+	
 	-- Get 8 planks
 	turtle.craft();
 	turtle.refuel(true, turtle.getItemCount(LOG) - 8);
@@ -194,12 +198,12 @@ function buildChest()
 	turtle.transferTo(11, 1);
 	turtle.craft();
 	
+	if turtle.detect() then turtle.dig(); end
 	turtle.place();
+	turtle.removeUnwanted(1);
 	
-	-- Recover log
+	-- Recover log and dirt
 	turtle.digUp();
-	
-	-- Recover dirt
 	turtle.digDown();
 	
 	turtle.goHome();
@@ -428,13 +432,17 @@ function buildFurnace()
 	turtle.transferTo(7, 1);
 	turtle.transferTo(9, 1);
 	turtle.transferTo(10, 1);
-	turtle.transferTo(11, 1);
+	turtle.transferTo(11); -- Transfer rest
 	
 	turtle.select(1);
 	turtle.craft(1);
 	
 	turtle.face(EAST);
+	
+	if turtle.detect() then turtle.dig(); end
 	turtle.place();
+	
+	turtle.removeUnwanted(1);
 	
 	recoverFromChest(LOG, COBBLE - 1);
 	recoverFromChest(COAL, 16);
@@ -738,7 +746,7 @@ turtle.goto = function(pX, pY, pZ, pFace)
 	end
 	
 	-- Avoid home
-	if pX ~= state.home.x or pY ~= state.home.y or pZ ~= state.home.z then
+	if state.home.y ~= 0 and (pX ~= state.home.x or pY ~= state.home.y or pZ ~= state.home.z) then
 		if state.y > state.home.y and pY <= state.home.y then
 			turtle.goHome();
 			
@@ -908,7 +916,7 @@ end
 
 -- Stores everything from start slot onward in check
 function storeInChest(pStartSlot, pEndSlot)
-	assert(type(pStartSlot) == "number" type(pEndSlot) == "number" and pStartSlot <= pEndSlot);
+	assert(type(pStartSlot) == "number" and type(pEndSlot) == "number" and pStartSlot <= pEndSlot);
 	
 	turtle.goHome();
 	turtle.face(SOUTH);
@@ -923,7 +931,7 @@ end
 
 -- Recovers everything from chest storing in slots starting at pStartSlot
 function recoverFromChest(pStartSlot, pEndSlot)
-	assert(type(pStartSlot) == "number" type(pEndSlot) == "number" and pStartSlot <= pEndSlot);
+	assert(type(pStartSlot) == "number" and type(pEndSlot) == "number" and pStartSlot <= pEndSlot);
 	
 	turtle.goHome();
 	turtle.face(SOUTH);
